@@ -2,7 +2,7 @@ public class Micro extends Chubgraph{
     inlet => LiSa mic => outlet;
 
     int active;
-    0.3::second => dur length;
+    8.0::second => dur length;
     100::ms => dur ramp;
 
     fun void rampTime(dur r) {
