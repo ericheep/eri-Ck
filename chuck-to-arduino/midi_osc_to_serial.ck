@@ -9,13 +9,20 @@ MidiIn min[10];
 MidiMsg mmsg;
 -1 => int port;
 
+// IAC MIDI name
+"Marimba" => string midi_name;
+"IAC Driver " + midi_name => midi_name;
+
+// OSC address
+"/marimba" => string osc_name;
+
 for (int i; i < min.cap(); i++) {
     // no print err
     min[i].printerr(0);
     
     // open the device
     if (min[i].open(i)) {
-        if (min[i].name() == "IAC Driver Marimba") {
+        if (min[i].name() == midi_name) {
             i => port;
             <<< "Connected to", min[port].name(), "" >>>;
         }
@@ -99,5 +106,5 @@ fun void midirecv() {
 initialize();
 
 // change name to whichever address you want to use
-spork ~ oscrecv("/marimba");
+spork ~ oscrecv(osc_name);
 midirecv();
