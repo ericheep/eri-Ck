@@ -22,18 +22,18 @@ for (int i; i < m.cap(); i++) {
     m[i].rampTime(((15.625/8.0) * (i + 1))::ms);
     adc => m[i] => dac.chan(0);
     m[i] => dac.chan(1);
-    m[i] => dac.chan(2);//2
-    m[i] => dac.chan(3);//3  
+    //m[i] => dac.chan(2);//2
+    //m[i] => dac.chan(3);//3  
     m[i].gain(1.0);  
 }
 
 fl.gain(0.7);
-adc => fl => dac.chan(2);//2
+//adc => fl => dac.chan(2);//2
 for (int i; i < ph.cap(); i++) {
     ph[i].gain(0.25);
     adc => ph[i] => g => dac.chan(0);
     ph[i] => g => dac.chan(1);
-    ph[i] => g => dac.chan(3);//3
+    //ph[i] => g => dac.chan(3);//3
 }
 
 for (int i; i < ph.cap(); i++) {

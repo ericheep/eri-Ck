@@ -1,22 +1,34 @@
-public class Phonogene extends Chubgraph {
-    inlet => LiSa mic => outlet;
+// Phonogene.ck
+// Eric Heep
+// live sampling class inspired by Make Noise's Phonogene
+// http://www.makenoisemusic.com/phonogene.shtml
+// requires BHEnv.ck
 
+public class Phonogene extends Chubgraph {
+    // sound chain
+    inlet => LiSa mic => BHEnv env => outlet;
+
+    // slice array
     dur slc[0];
-    dur rec_time, grain_time, loop_time, end, begin;
+
+    // scoped variables
+    1.0 => float rte;
+    float pos, grain_size, grain_pos;
+    int overdub_active, play_active, rec_active, pos_button;
+
+    dur env_time, rec_time, grain_time, loop_time, end, begin;
     8::second => dur length;
 
-    int overdub_active, play_active, rec_active, pos_button;
-    float pos, grain_size, grain_pos;
-
-    // default overdub mix
     grainSize(1.0);
     grainPos(0.5);
     feedback(1.0);
 
+    // bidirectionality
     fun void bi(int b) {
         mic.bi(1);
     }
 
+    // clears audio buffer and slice array
     fun void clear() {
         if (slc.size() > 2) {
             0 => slc.size;
@@ -30,6 +42,7 @@ public class Phonogene extends Chubgraph {
         }
     }
 
+    // allocate memory for audio
     fun void duration(dur l) {
         l => length;
     }
@@ -55,7 +68,14 @@ public class Phonogene extends Chubgraph {
     fun void playing() {
         mic.play(1);
         while(play_active) {
-            grain_time => now;
+            mic.playPos(0::samp);
+            now => time past;
+            grain_time/6 => dur env_time;
+            env.up(env_time);
+            grain_time - env_time => now;
+            env.down(env_time);
+            env_time => now;
+            <<< (now - past)/second, grain_time/second >>>;
             sliceReset();
         }
         mic.play(0);
@@ -86,6 +106,9 @@ public class Phonogene extends Chubgraph {
     }
 
     fun void rate(float r) {
+        if (r != 0) {
+            1.0/Math.fabs(r) => rte;
+        }
         mic.rate(r);
     }
 
@@ -122,7 +145,7 @@ public class Phonogene extends Chubgraph {
         slc << rec_time;
     }
 
-    // Reoders an array
+    // internal function, reoders array
     fun dur[] sort(dur x[]) {
         dur out[x.cap()];
         int sum;
@@ -178,7 +201,7 @@ public class Phonogene extends Chubgraph {
                     slc[i] + offset => begin;
                     mic.loopStart(begin);
                     mic.loopEnd(end);
-                    end - begin => grain_time;
+                    (end - begin) * rte => grain_time;
                 }
             }
         }

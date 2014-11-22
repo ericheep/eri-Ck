@@ -1,6 +1,12 @@
+// Micro.ck
+// Eric Heep
+// live sampling class centered around micro loops
+
 public class Micro extends Chubgraph{
+    // sound chain
     inlet => LiSa mic => outlet;
 
+    // scoped variables
     int active;
     8.0::second => dur length;
     100::ms => dur ramp;
