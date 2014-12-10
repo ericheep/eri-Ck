@@ -1,7 +1,6 @@
 // for_ann.ck
-// requires BHEnv.ck and ExpEnv.ck
-
 // Eric Heep
+
 // A recreation of James Tenney's "For Ann (rising)."
 // This recreation uses the the golden mean instead of a JI minor sixth.
 // the result is that each first order difference tone reinforces the 
@@ -19,17 +18,18 @@
 14250.0 => float max_frq;
 
 // slope of ascension
-// 3.074 cents per millisecond over (exactly) 37 seconds
+// 3.074 cents per millisecond over exactly 37 seconds
 0.003074 => float pitch_inc;
 
 // max voices heard at a time ~13, using 15 for no overlap
-15 => int voices;
+20 => int voices;
 
 // envelope parameters:
 // 160ms => attack (BH)
 // 80ms => decay (BH)
 // 36.74 => release (Exp)
-260::ms => dur attack;
+160::ms => dur attack;
+80::ms => dur decay;
 36.74::second => dur release;
 
 // limit of the fibonacci series, the golden mean
@@ -44,26 +44,22 @@
 // ~~~~ the rest of the code is standard ChucK
 
 // oscillators
-SinOsc sin[voices];
+SawOsc sin[voices];
+ADSR env[voices];
 Gain master => dac;
-ExpEnv exp[voices];
-BHEnv bh[voices];
 
 for (int i; i < voices; i++) {
     // sound chain
-    sin[i] => bh[i] => exp[i] => master;
+    sin[i] => env[i] => master;
     sin[i].gain(0.0);
-   
-    // envelope calculations
-    bh[i].calc(attack, 0);
-    exp[i].calc(release, 1);
-    exp[i].power(Math.e);
-    <<< "Calculating Envelope:", i >>>;
+  
+    // attack, decay, sustain, and release
+    env[i].set(attack, decay, 1.0, release);
 }
 
 // latch to ensure each sine wave starts once
 int latch[voices];
-int print_inc, offset, total;
+int print_inc, offset, total, end;
 
 // frquency control variables
 14 => float pitch;
@@ -90,7 +86,7 @@ fun void assignFreq() {
         sin[i].freq(hz[i]); 
     }
     // uncomment to show frequencies while the program is running
-    //printHz();
+    printHz();
 }
 
 // sanity function that ensures proper logic and calculations
@@ -122,27 +118,34 @@ fun void raisePitch() {
 fun void play(int which) {
     // ensures only 240 sine waves are called
     total++;
+
+    // sin phase sync
+    sin[which].phase(0.0);
+
     // variable gain can be used to avoid clipping
-    sin[which].gain(0.20);
+    sin[which].gain(0.10);
     <<< "Playing Sine Wave:", total >>>;
 
     // main envelope, where all the sound comes from
-    bh[which].up(attack);
-    attack => now;
-    exp[which].down(release);
+    env[which].keyOn();
+    attack + decay => now;
+    env[which].keyOff();
     release => now;
     sin[which].gain(0.0);
 
     // re-enables latch per sine wave
     0 => latch[which];
+    end++;
 }
 
 fun void main() {
-    while (true) {
+    while (end < num_sines - 1) {
         raisePitch();
         assignFreq();
         1::ms => now;
     }
+    // breathing room at the end
+    2::second => now;
 }
 
 // runs program indefinitely

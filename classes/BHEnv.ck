@@ -95,6 +95,3 @@ public class BHEnv extends Chugen {
         return in;
     }
 }
-
-BHEnv env;
-env.calc(32::samp, 1);
