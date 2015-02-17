@@ -82,6 +82,10 @@ public class Quneo {
     26 => int play_loc_v;
     86 => int play_loc_z;
 
+    int fader_x, fader_z;
+    10 => int fader_loc_x;
+    22 => int fader_loc_z;
+
     // midi setup -------------------------------
     int port;
     MidiIn in[10];
@@ -183,6 +187,12 @@ public class Quneo {
             }
             if (data2 == play_loc_z) {
                 data3 => play_z;
+            }
+            if (data2 == fader_loc_x) {
+                data3 => fader_x;
+            }
+            if (data2 == fader_loc_z) {
+                data3 => fader_z;
             }
         }
     }
@@ -290,6 +300,20 @@ public class Quneo {
             return play_z;
         }
     }
+    
+    // fader
+    fun int fader() {
+        return fader_x;
+    }
+
+    fun int fader(string mode) {
+        if (mode == "x") {
+            return fader_x;
+        }
+        if (mode == "z") {
+            return fader_z;
+        }
+    }
 
     // led out
     fun void led(int type, int num, int vel) {
@@ -303,6 +327,6 @@ public class Quneo {
 Quneo q;
 
 while (true) {
-    <<< q.diamond("z") >>>;
+    <<< q.fader("z") >>>;
     100::ms => now;
 }
