@@ -44,7 +44,7 @@
 // ~~~~ the rest of the code is standard ChucK
 
 // oscillators
-SawOsc sin[voices];
+SinOsc sin[voices];
 ADSR env[voices];
 Gain master => dac;
 
@@ -86,7 +86,7 @@ fun void assignFreq() {
         sin[i].freq(hz[i]); 
     }
     // uncomment to show frequencies while the program is running
-    printHz();
+    //printHz();
 }
 
 // sanity function that ensures proper logic and calculations
