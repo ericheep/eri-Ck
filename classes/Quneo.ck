@@ -9,53 +9,96 @@
 
 public class Quneo { 
 
+    // sliders  ---------------------------------
+    8 => int num_sliders;
+
+    // arrays for sliders
+    int slider_x[num_sliders];
+    int slider_z[num_sliders];
+  
+    // array for slider x-axis 
+    [ 0,  1,  2,  3,  6,  7,  8,  9] @=> int slider_loc_x[];
+    // array for slider z-axis
+    [12, 13, 14, 15, 18, 19, 20, 21] @=> int slider_loc_z[];
+
+    // circles ----------------------------------
+    2 => int num_circles;
+
+    // array for circles
+    int circle_r[num_circles];
+    int circle_z[num_circles];
+
+    // array for circle r-axis
+    [ 4,  5] @=> int circle_loc_r[];
+    // array for circle z-axis 
+    [16, 17] @=> int circle_loc_z[];
+
+    // pads -------------------------------------
     16 => int num_pads;
-    10 => int num_sliders;
-    13 => int num_buttons;
-    
-    // arrays for velocity and three axes
+
+    // arrays for pads
     int pad_v[num_pads];
     int pad_z[num_pads];
     int pad_x[num_pads];
     int pad_y[num_pads];
 
-    // arrays for sliders
-    int slider[10];
-
-    // arrays for buttons
-    int button[13];
-
-    // special buttons
-    int play, stop, diamond, fader;
-    
-
+    // array for pad velocity
+    [ 0,  1,  2,  3,  4,  5,  6,  7,
+      8,  9, 10, 11, 12, 13, 14, 15] @=> int pad_loc_v[];
+    // array for pad z-axis
     [23, 26, 29, 32, 35, 38, 41, 44,
-     47, 50, 53, 56, 59, 62, 65, 68] @=> int z[];
-
+     47, 50, 53, 56, 59, 62, 65, 68] @=> int pad_loc_z[];
+    // array for pad x-axis
     [24, 27, 30, 33, 36, 39, 42, 45,
-     48, 51, 54, 57, 60, 63, 66, 69] @=> int x[];
-
+     48, 51, 54, 57, 60, 63, 66, 69] @=> int pad_loc_x[];
+    // array for pad y-axis
     [25, 28, 31, 34, 37, 40, 43, 46,
-     49, 52, 55, 58, 61, 64, 67, 70] @=> int y[];
+     49, 52, 55, 58, 61, 64, 67, 70] @=> int pad_loc_y[];
 
+    // arrows -----------------------------------
+    12 => int num_arrows;
+
+    // arrays for arrows 
+    int arrow_v[num_arrows];
+    int arrow_z[num_arrows];
+
+    // array for arrow velocity
+    [11, 12, 13, 14, 15, 16, 
+     17, 18, 20, 21, 22, 23] @=> int arrow_loc_v[];
+    // array for arrow z-axis
+    [71, 72, 73, 74, 75, 76, 
+     77, 78, 80, 81, 82, 83] @=> int arrow_loc_z[];
     
-    // midi setup
+    // misc -------------------------------------
+    int diamond_v, diamond_z;
+    24 => int diamond_loc_v;
+    84 => int diamond_loc_z;
+
+    int stop_v, stop_z;
+    25 => int stop_loc_v;
+    85 => int stop_loc_z;
+
+    int play_v, play_z;
+    26 => int play_loc_v;
+    86 => int play_loc_z;
+
+    // midi setup -------------------------------
     int port;
-    MidiIn min[10];
-    MidiOut mout[10];
+    MidiIn in[10];
+    MidiOut out[10];
     MidiMsg msgIn;
     MidiMsg msgOut;
     
-    for (int i; i < min.cap(); i++) {
+    for (int i; i < in.cap(); i++) {
         // no print err
-        min[i].printerr(0);
+        in[i].printerr(0);
         
         // open the device
-        if (min[i].open(i)) {
-            if (min[i].name() == "QUNEO") {
+        if (in[i].open(i)) {
+            if (in[i].name() == "QUNEO") {
                 i => port;
-                <<< "Connected to", min[port].name(), "" >>>;
-                mout[i].open(i);
+                <<< "Connected to", in[port].name(), "" >>>;
+                out[i].open(i);
             }
         }
         else break;
@@ -63,81 +106,116 @@ public class Quneo {
     
     spork ~ update();
 
-    // input
+    // input ------------------------------------
     fun void update() {
         while (true) {
             // waits on midi events
-            min[port] => now;
-            while (min[port].recv(msgIn)) {
-                getValues(msgIn.data1, msgIn.data2, msgIn.data3);
-                // 23 is z, 24 is x, 25 is y
-                // <<< msgIn.data1, msgIn.data2, msgIn.data3 >>>;
+            in[port] => now;
+            while (in[port].recv(msgIn)) {
+                storeValues(msgIn.data1, msgIn.data2, msgIn.data3);
             }
         }
     }
     
     // convert values
-    fun void getValues(int data1, int data2, int data3){
-        if((data1 == 144)||(data1 == 128)){
-            for (int i; i < num_pads; i++){
-                data3 => pad_v[i];
+    fun void storeValues(int data1, int data2, int data3) {
+        // 128 and 144, trigger/velocity based
+        if((data1 == 128 || data1 == 144)) {
+            for (int i; i < num_pads; i++) {
+                if (data2 == pad_loc_v[i]) {
+                    data3 => pad_v[i];
+                }
+            }
+            for (int i; i < num_arrows; i++){
+                if (data2 == arrow_loc_v[i]) {
+                    data3 => arrow_v[i];
+                }
+            }
+            if (data2 == diamond_loc_v) {
+                data3 => diamond_v;
+            }
+            if (data2 == play_loc_v) { 
+                data3 => play_v;
+            }
+            if (data2 == stop_loc_v) { 
+                data3 => stop_v;
             }
         }
+        // 176, x, y, and z axes where applicable
         if (data1 == 176) {
             for (int i; i < num_pads; i++) {
-                if(data2 == x[i]){
+                if (data2 == pad_loc_x[i]) {
                     data3 => pad_x[i];
                 }
-                if(data2 == y[i]){
+                if (data2 == pad_loc_y[i]) {
                     data3 => pad_y[i];
                 }
-                if(data2 == z[i]){
+                if (data2 == pad_loc_z[i]) {
                     data3 => pad_z[i];
                 }
             }
-
-            if (data2 == 10) {
-                data3 => fader;
-            }
-            for (int i; i < 10; i++) {
-                if (data2 == i) {
-                    data3 => slider[i];
+            for (int i; i < num_arrows; i++) {
+                if (data2 == arrow_loc_z[i]) {
+                    data3 => arrow_z[i];
                 }
             }
-            for (int i; i < 13; i++) {
-                if (data2 == i + 71) {
-                    data3 => button[i];
+            for (int i; i < num_circles; i++) {
+                if (data2 == circle_loc_r[i]) {
+                    data3 => circle_r[i];
+                }
+                if (data2 == circle_loc_z[i]) {
+                    data3 => circle_z[i];
                 }
             }
-            if (data2 == 84) {
-                data3 => diamond;
+            for (int i; i < num_sliders; i++) {
+                if (data2 == slider_loc_x[i]) {
+                    data3 => slider_x[i];
+                }
+                if (data2 == slider_loc_z[i]) {
+                    data3 => slider_z[i];
+                }
             }
-            if (data2 == 85) {
-                data3 => stop;
+            if (data2 == diamond_loc_z) {
+                data3 => diamond_z;
             }
-            if (data2 == 86) {
-                data3 => play;
+            if (data2 == stop_loc_z) {
+                data3 => stop_z;
             }
-        }
-        
-        /*
-        for (int i; i < 16; i++){
-            if(data2 == i + 16){
-                data3 => padZ[i];
-            }
-            else if(data2 == i + 32){
-                data3 => padX[i];
-            }
-            else if(data2 == i + 48) {
-                data3 => padY[i];
-            }
-            else if(data2 == i + 64) {
-                data3 => slider[i];
+            if (data2 == play_loc_z) {
+                data3 => play_z;
             }
         }
-        */
     }
 
+    // circle
+    fun int circle(int idx) {
+        return circle_r[idx];
+    }
+
+    fun int circle(int idx, string mode) {
+        if (mode == "r") {
+            return circle_r[idx];
+        }
+        if (mode == "z") {
+            return circle_z[idx];
+        }
+    }
+    
+    // arrow
+    fun int arrow(int idx) {
+        return arrow_v[idx];
+    }
+
+    fun int arrow(int idx, string mode) {
+        if (mode == "v") {
+            return arrow_v[idx];
+        }
+        if (mode == "z") {
+            return arrow_z[idx];
+        }
+    }
+
+    // pad
     fun int pad(int idx) {
         return pad_v[idx];
     }
@@ -156,49 +234,75 @@ public class Quneo {
             return pad_z[idx];
         }
     }
-    
+
+    // slider
+    fun int slider(int idx) {
+        return slider_x[idx];
+    }
+
+    fun int slider(int idx, string mode) {
+        if (mode == "x") {
+            return slider_x[idx];
+        }
+        if (mode == "z") {
+            return slider_z[idx];
+        }
+    }        
+
+    // diamond
+    fun int diamond() {
+        return diamond_v;
+    }
+
+    fun int diamond(string mode) {
+        if (mode == "v") {
+            return diamond_v;
+        }
+        if (mode == "z") {
+            return diamond_z;
+        }
+    }
+
+    // stop
+    fun int stop() {
+        return stop_v;
+    }
+
+    fun int stop(string mode) {
+        if (mode == "v") {
+            return stop_v;
+        }
+        if (mode == "z") {
+            return stop_z;
+        }
+    }
+   
+    // play
+    fun int play() {
+        return play_v;
+    }
+
+    fun int play(string mode) {
+        if (mode == "v") {
+            return play_v;
+        }
+        if (mode == "z") {
+            return play_z;
+        }
+    }
+
+    // led out
     fun void led(int type, int num, int vel) {
         type => msgOut.data1;
         num => msgOut.data2;
         vel => msgOut.data3;
-        mout[port].send(msgOut);
+        out[port].send(msgOut);
     }
-    
-    // output Functions
-    /*
-    fun void padLEDOn(int padNumber, int color, int brightness){
-        144 => msgOut.data1;
-        if(color == 0){
-            padLEDGreen[padNumber] => msgOut.data2;
-        }
-        else if(color == 1){
-            padLEDRed[padNumber] => msgOut.data2;
-        }
-        brightness => msgOut.data3;
-        
-        mout[port].send(msgOut);
-    }
-    
-    fun void padLEDOff(int padNumber, int color){
-        128 => msgOut.data1;
-        
-        if(color == 0){
-            padLEDGreen[padNumber] => msgOut.data2;
-        }
-        else if(color == 1){
-            padLEDRed[padNumber] => msgOut.data2;
-        }
-        
-        0 => msgOut.data3;
-        
-        mout[port].send(msgOut);
-    }
-    */
 }
 
 Quneo q;
 
 while (true) {
-    <<< q.pad(0, "v") >>>;
+    <<< q.diamond("z") >>>;
     100::ms => now;
 }
