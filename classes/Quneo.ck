@@ -43,8 +43,8 @@ public class Quneo {
     int pad_y[num_pads];
 
     // array for pad velocity
-    [ 0,  1,  2,  3,  4,  5,  6,  7,
-      8,  9, 10, 11, 12, 13, 14, 15] @=> int pad_loc_v[];
+    [84, 85, 86, 87, 88, 89, 90, 91,
+     92, 93, 94, 95, 96, 97, 98, 99] @=> int pad_loc_v[];
     // array for pad z-axis
     [23, 26, 29, 32, 35, 38, 41, 44,
      47, 50, 53, 56, 59, 62, 65, 68] @=> int pad_loc_z[];
@@ -54,6 +54,12 @@ public class Quneo {
     // array for pad y-axis
     [25, 28, 31, 34, 37, 40, 43, 46,
      49, 52, 55, 58, 61, 64, 67, 70] @=> int pad_loc_y[];
+    // array for green leds
+    [ 0,  2,  4,  6,  8, 10, 12, 14,
+     16, 18, 20, 22, 24, 26, 28, 30] @=> int pad_led_g[];
+    // array for red leds
+    [ 1,  3,  5,  7,  9, 11, 13, 15,
+     17, 19, 21, 23, 25, 27, 29, 31] @=> int pad_led_r[];
 
     // arrows -----------------------------------
     12 => int num_arrows;
@@ -121,7 +127,6 @@ public class Quneo {
         }
     }
     
-    // convert values
     fun void storeValues(int data1, int data2, int data3) {
         // 128 and 144, trigger/velocity based
         if((data1 == 128 || data1 == 144)) {
@@ -243,6 +248,16 @@ public class Quneo {
         if (mode == "z") {
             return pad_z[idx];
         }
+        if (mode == "g") {
+            led(144, pad_led_g[idx], 127);
+        }
+        if (mode == "r") {
+            led(144, pad_led_r[idx], 127);
+        }
+        if (mode == "o") {
+            led(144, pad_led_g[idx], 127);
+            led(144, pad_led_r[idx], 127);
+        }
     }
 
     // slider
@@ -327,6 +342,8 @@ public class Quneo {
 Quneo q;
 
 while (true) {
-    <<< q.fader("z") >>>;
-    100::ms => now;
+    for (int i; i < 16; i++) {
+        q.pad(i, "r");
+        100::ms => now;
+    }
 }
