@@ -20,6 +20,8 @@ public class Quneo {
     [ 0,  1,  2,  3,  6,  7,  8,  9] @=> int slider_loc_x[];
     // array for slider z-axis
     [12, 13, 14, 15, 18, 19, 20, 21] @=> int slider_loc_z[];
+    // array for slider leds
+    [11, 10,  9,  8,  1,  2,  3,  4] @=> int slider_led[];
 
     // circles ----------------------------------
     2 => int num_circles;
@@ -32,6 +34,8 @@ public class Quneo {
     [ 4,  5] @=> int circle_loc_r[];
     // array for circle z-axis 
     [16, 17] @=> int circle_loc_z[];
+    // array for circle leds
+    [ 6,  7] @=> int circle_led[];
 
     // pads -------------------------------------
     16 => int num_pads;
@@ -74,6 +78,9 @@ public class Quneo {
     // array for arrow z-axis
     [71, 72, 73, 74, 75, 76, 
      77, 78, 80, 81, 82, 83] @=> int arrow_loc_z[];
+    // array for arrow leds
+    [36, 37, 38, 39, 40, 41,
+     42, 43, 46, 47, 48, 49] @=> int arrow_led[];
     
     // misc -------------------------------------
     int diamond_v, diamond_z;
@@ -214,6 +221,15 @@ public class Quneo {
         if (mode == "z") {
             return circle_z[idx];
         }
+        if (mode == "led") {
+            led(176, circle_led[idx], 127);
+        }
+    }
+
+    fun int circle(int idx, string mode, int vel) {
+        if (mode == "led") {
+            led(176, circle_led[idx], vel);
+        }
     }
     
     // arrow
@@ -227,6 +243,15 @@ public class Quneo {
         }
         if (mode == "z") {
             return arrow_z[idx];
+        }
+        if (mode == "led") {
+            led(144, arrow_led[idx], 127);
+        }
+    }
+
+    fun int arrow(int idx, string mode, int vel) {
+        if (mode == "led") {
+            led(144, arrow_led[idx], vel);
         }
     }
 
@@ -249,14 +274,31 @@ public class Quneo {
             return pad_z[idx];
         }
         if (mode == "g") {
+            led(144, pad_led_r[idx], 0);
             led(144, pad_led_g[idx], 127);
         }
         if (mode == "r") {
+            led(144, pad_led_g[idx], 0);
             led(144, pad_led_r[idx], 127);
         }
         if (mode == "o") {
             led(144, pad_led_g[idx], 127);
             led(144, pad_led_r[idx], 127);
+        }
+    }
+
+    fun int pad(int idx, string mode, int vel) {
+        if (mode == "g") {
+            led(144, pad_led_r[idx], 0);
+            led(144, pad_led_g[idx], vel);
+        }
+        if (mode == "r") {
+            led(144, pad_led_g[idx], 0);
+            led(144, pad_led_r[idx], vel);
+        }
+        if (mode == "o") {
+            led(144, pad_led_g[idx], vel);
+            led(144, pad_led_r[idx], vel);
         }
     }
 
@@ -272,7 +314,15 @@ public class Quneo {
         if (mode == "z") {
             return slider_z[idx];
         }
+        if (mode == "led") {
+            led(176, slider_led[idx], 127);
+        }
     }        
+    fun int slider(int idx, string mode, int vel) {
+        if (mode == "led") {
+            led(176, slider_led[idx], vel);
+        }
+    }
 
     // diamond
     fun int diamond() {
@@ -285,6 +335,15 @@ public class Quneo {
         }
         if (mode == "z") {
             return diamond_z;
+        }
+        if (mode == "led") {
+            led(144, 33, 127);
+        }
+    }
+    
+    fun int diamond(string mode, int vel) {
+        if (mode == "led") {
+            led(144, 33, vel);
         }
     }
 
@@ -300,6 +359,15 @@ public class Quneo {
         if (mode == "z") {
             return stop_z;
         }
+        if (mode == "led") {
+            led(144, 34, 127);
+        }
+    }
+
+    fun int stop(string mode, int vel) {
+        if (mode == "led") {
+            led(144, 34, vel);
+        }
     }
    
     // play
@@ -313,6 +381,15 @@ public class Quneo {
         }
         if (mode == "z") {
             return play_z;
+        }
+        if (mode == "led") {
+            led(144, 35, 127);
+        }
+    }
+
+    fun int play(string mode, int vel) {
+        if (mode == "led") {
+            led(144, 35, vel);
         }
     }
     
@@ -328,6 +405,15 @@ public class Quneo {
         if (mode == "z") {
             return fader_z;
         }
+        if (mode == "led") {
+            led(176, 5, 127);
+        }
+    }
+
+    fun int fader(string mode, int vel) {
+        if (mode == "led") {
+            led(176, 5, vel);
+        }
     }
 
     // led out
@@ -340,10 +426,21 @@ public class Quneo {
 }
 
 Quneo q;
+int inc;
 
 while (true) {
-    for (int i; i < 16; i++) {
-        q.pad(i, "r");
-        100::ms => now;
+    (inc + 1) % 127 => inc;
+    for (int i; i < 8; i++) {
+        q.slider(i, "led", inc);
     }
+    for (int i; i < 12; i++) {
+        q.arrow(i, "led", inc);
+    }
+    q.circle(0, "led", inc);
+    q.circle(1, "led", inc);
+    q.fader("led", inc);
+    q.play("led", inc);
+    q.stop("led", inc);
+    q.diamond("led", inc);
+    5::ms => now;
 }
