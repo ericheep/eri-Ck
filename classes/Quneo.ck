@@ -8,7 +8,10 @@
 // select the fourth pad to activate mode 4
 
 public class Quneo { 
-
+    
+    // notes
+    // Event @ newstuff;
+    
     // sliders  ---------------------------------
     8 => int num_sliders;
 
@@ -99,6 +102,10 @@ public class Quneo {
     10 => int fader_loc_x;
     22 => int fader_loc_z;
 
+    int nose_v, nose_z;
+    19 => int nose_loc_v;
+    79 => int nose_loc_z;
+
     // midi setup -------------------------------
     int port;
     MidiIn in[10];
@@ -130,6 +137,8 @@ public class Quneo {
             in[port] => now;
             while (in[port].recv(msgIn)) {
                 storeValues(msgIn.data1, msgIn.data2, msgIn.data3);
+                //<<< msgIn.data1, msgIn.data2, msgIn.data3 >>>;
+                //19 79
             }
         }
     }
@@ -155,6 +164,9 @@ public class Quneo {
             }
             if (data2 == stop_loc_v) { 
                 data3 => stop_v;
+            }
+            if (data2 == nose_loc_v) {
+                data3 => nose_v;
             }
         }
         // 176, x, y, and z axes where applicable
@@ -205,6 +217,9 @@ public class Quneo {
             }
             if (data2 == fader_loc_z) {
                 data3 => fader_z;
+            }
+            if (data2 == nose_loc_z) {
+                data3 => nose_z;
             }
         }
     }
@@ -416,7 +431,36 @@ public class Quneo {
         }
     }
 
-    // led out
+    // nose
+    fun int nose() {
+        return nose_v;
+    }
+
+    fun int nose(string mode) {
+        if (mode == "v") {
+            return nose_v; 
+        }
+        if (mode == "z") {
+            return nose_z; 
+        }
+        if (mode == "g") {
+            led(144, 44, 127); 
+        }
+        if (mode == "r") {
+            led(144, 45, 127); 
+        }
+    }
+
+    fun int nose(string mode, int vel) {
+        if (mode == "g") {
+            led(144, 44, vel);
+        }
+        if (mode == "r") {
+            led(144, 45, vel);
+        }
+    }
+
+    // led utility function
     fun void led(int type, int num, int vel) {
         type => msgOut.data1;
         num => msgOut.data2;
@@ -425,11 +469,18 @@ public class Quneo {
     }
 }
 
+// static int Z;
+
+// fun int play(int mode) [
+//    return Z; 
+//}
+
 Quneo q;
 int inc;
 
 while (true) {
-    (inc + 1) % 127 => inc;
+/*
+    (inc + 1) % 128 => inc;
     for (int i; i < 8; i++) {
         q.slider(i, "led", inc);
     }
@@ -442,5 +493,9 @@ while (true) {
     q.play("led", inc);
     q.stop("led", inc);
     q.diamond("led", inc);
-    5::ms => now;
+    q.led(145, Math.random2(0, 128), 127);
+    */
+
+    <<< q.play("led", 127) >>>;
+    100::ms => now;
 }
