@@ -7,13 +7,17 @@ out.setDest("ceiling", "localhost", 12001);
 out.setDest("wall", "localhost", 12002);
 
 // beast osc row/column setup
-[14, 9, 9, 7, 9, 9, 14] @=> int total_size[];
-out.setCols(total_size.size());
+[14, 9, 9, 7, 9, 9, 14] @=> int num_rows[];
+out.setCols(num_rows.size());
 out.setRows("ceiling", [7, 5, 5, 3, 5, 5, 7]);
 out.setRows("wall", [7, 4, 4, 4, 4, 4, 7]);
 
 // number of columns
 7 => int num_cols;
+
+// utility array class
+Utility u;
+u.init(num_rows);
 
 // multi sin
 MultiSin m_sin;
@@ -32,9 +36,9 @@ float orbit_sin[num_cols][0];
 
 // array allocation
 for (int i; i < num_cols; i++) {
-    total_size[i] => multi_sin[i].size;
-    total_size[i] => single_sin[i].size;
-    total_size[i] => orbit_sin[i].size;
+    num_rows[i] => multi_sin[i].size;
+    num_rows[i] => single_sin[i].size;
+    num_rows[i] => orbit_sin[i].size;
 }
 
 // test loop
@@ -49,68 +53,29 @@ o_sin.range(0.2);
 o_sin.offset(0.5);
 o_sin.speed(0.01);
 
-float all_val[7][0];
-
 // all our values
 float total_width[7][0];
 float total_height[7][0];
 
-for (int i; i < total_size.size(); i++) {
-    total_size[i] => all_val[i].size;
-    total_size[i] => total_width[i].size => total_height[i].size;
-}
-
-// resets arrays
-fun void zeroArr(float arr[][]) {
-    for (int i; i < num_cols; i++) {
-        for (int j; j < arr[i].size(); j++) {
-            0 => arr[i][j];
-        }
-    }
-}
-
-// highlights every square
-fun void allArr(float arr[][]) {
-    for (int i; i < num_cols; i++) {
-        for (total_size[i] - 2 => int j; j >= 0; j--) {
-            arr[i][j] => arr[i][j + 1];
-        }
-        1.0 => arr[i][0];
-    }
-}
-
-fun void combineVals(float arr[], float sin_arr[], float circle_arr[], float big_arr[], float all_arr[]) {
-    for (int i; i < arr.size(); i++) {
-        if (circle_arr[i] <= 0.1) {
-            arr[i] + sin_arr[i] => arr[i];
-        }
-        if (circle_arr[i] > 0.1 && circle_arr[i] <= 1.0) {
-            circle_arr[i] + 1.0 => arr[i];
-        }
-        if (big_arr[i] > 0.0) {
-            big_arr[i] + 2.0 => arr[i];
-        }
-        if (all_arr[i] > 0.0) {
-            all_arr[i] => arr[i];
-        }
-    }
+for (int i; i < num_rows.size(); i++) {
+    num_rows[i] => total_width[i].size => total_height[i].size;
 }
 
 // updates at framerate
 while (true) {
-    zeroArr(total_width);
-    zeroArr(total_height);
+    u.zero(total_width) @=> total_width;
+    u.zero(total_height) @=> total_height;
 
     m_sin.calc(multi_sin) @=> multi_sin;
-    s_sin.calc(single_sin) @=> single_sin;
-    o_sin.calc(orbit_sin) @=> orbit_sin;
-    allArr(all_val);
+    //s_sin.calc(single_sin) @=> single_sin;
+    //o_sin.calc(orbit_sin) @=> orbit_sin;
 
-    for (int i; i < num_cols; i++) {
-        combineVals(total_width[i], multi_sin[i], orbit_sin[i], single_sin[i], all_val[i]);
-        combineVals(total_height[i], multi_sin[i], orbit_sin[i], single_sin[i], all_val[i]);
-    }
+    u.order(total_width, multi_sin, orbit_sin, single_sin) @=> total_width;
+    u.order(total_height, multi_sin, orbit_sin, single_sin) @=> total_height;
 
+    //u.all(total_width) @=> total_width;
+    //u.all(total_height) @=> total_height;
+    
     // sends osc
     out.send("width", total_width);
     out.send("height", total_height);
