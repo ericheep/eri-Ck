@@ -1,3 +1,9 @@
+// red-beast
+
+// Eric Heep
+// for Manuel Lima's 2nd Year DMA Recital "Red Light Piano"
+// MTIID4LIFE
+
 public class BeastOsc {
 
     OscOut ceilingOut;
@@ -17,7 +23,6 @@ public class BeastOsc {
 
     int ceiling_size[];
     int wall_size[];
-
     int num_cols;
 
     fun void setCols(int c) {
@@ -43,7 +48,6 @@ public class BeastOsc {
     }
 
     fun void send(string type, float val[][]) {
-
         for (int i; i < num_cols; i++) {
             // to the ceiling
             ceilingOut.start(ceilingAddr[type][i]);

@@ -74,8 +74,9 @@ while (true) {
     u.order(total_width, multi_sin, orbit_sin, single_sin) @=> total_width;
     u.order(total_height, multi_sin, orbit_sin, single_sin) @=> total_height;
 
-    //u.all(total_width) @=> total_width;
-    //u.all(total_height) @=> total_height;
+    // sets every square to red, mainly for mapping
+    u.all(total_width) @=> total_width;
+    u.all(total_height) @=> total_height;
     
     // sends osc
     out.send("width", total_width);

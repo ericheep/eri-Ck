@@ -12,8 +12,8 @@ public class SingleSin extends Chubgraph{
 
     float phase;
     float phase_inc;
-    float high, low, width, temp_val;
-    1.0/12.0 => width;
+    float high, low, wdth, temp_val;
+    1.0/12.0 => wdth;
 
     2 * pi => float two_pi;
     int num_cols;
@@ -38,6 +38,11 @@ public class SingleSin extends Chubgraph{
         g => vl;
     }
 
+    fun void width(float w) {
+        w => wdth;
+    }
+
+
     // multiple sin stuff
     fun float[][] calc(float val[][]) {
         for (int i; i < num_cols; i++) {
@@ -60,11 +65,11 @@ public class SingleSin extends Chubgraph{
                     two_pi -=> phase;
                 }
 
-                (Math.sin(phase) * vl + 1.0) * 0.5 * (1.0 - width * 2) + width  => temp_val;
+                (Math.sin(phase) * vl + 1.0) * 0.5 * (1.0 - wdth * 2) + wdth  => temp_val;
             }
 
-            temp_val - width => low;
-            temp_val + width => high;
+            temp_val - wdth => low;
+            temp_val + wdth => high;
 
             if (low >= pos[i] && low < pos[i + 1]) {  
                 (low - pos[i])/ratio[i] => val[i][0]; 
