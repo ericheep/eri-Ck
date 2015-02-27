@@ -26,7 +26,7 @@ public class MultiSin extends Chubgraph {
         f => sin_frq[idx];
     }
 
-    fun void gain(int idx, float g) {
+    fun void vol(int idx, float g) {
         g => sin_gain[idx];
     }
 

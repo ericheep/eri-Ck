@@ -3,6 +3,7 @@ Machine.add(me.dir() + "BeastOsc.ck");
 
 // classes that produce sound and send osc to Processing
 Machine.add(me.dir() + "MultiSin.ck");
+Machine.add(me.dir() + "SingleSin.ck");
 
 // main program
 Machine.add(me.dir() + "red_beast.ck");

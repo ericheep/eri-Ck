@@ -20,21 +20,28 @@ MultiSin m_sin;
 m_sin.init(num_cols);
 float multi_sin[num_cols][0];
 
+// single sin
+SingleSin s_sin;
+s_sin.init(num_cols);
+float single_sin[num_cols][0];
+
+// array allocation
 for (int i; i < num_cols; i++) {
     total_size[i] => multi_sin[i].size;
+    total_size[i] => single_sin[i].size;
 }
 
 // test loop
 for (int i; i < num_cols; i++) {
     m_sin.freq(i, Math.random2f(1.1, 2.1));
-    m_sin.gain(i, Math.random2f(0.5, 1.0));
+    m_sin.vol(i, Math.random2f(0.5, 1.0));
+    s_sin.freq(Math.random2f(1.1, 2.1));
+    s_sin.vol(Math.random2f(0.5, 1.0));
 }
 
 // consts
 2 * pi => float two_pi;
 
-float big_val[7][0];
-float big_check[7][0];
 float circle_val[7][0];
 float all_val[7][0];
 
@@ -47,27 +54,9 @@ float circle_mod;
 float circle_offset;
 0.05 => float circle_range;
 
-// big vals
-1.0 => float big_vol;
-1.12 => float big_frq;
-float big_amp;
-float big_prev_frq;
-float big_phase;
-float big_phase_inc;
-float high, low, width;
-1.0/12.0 => width;
-
-[-1.0, -2.0/3.0, -1.0/3.0, -1.0/6.0, 1.0/6.0, 1.0/3.0, 2.0/3.0, 1.0] @=> float big_col[];
-[1.0/6.0, 1.0/6.0, 1.0/12.0, 1.0/6.0, 1.0/12.0, 1.0/6.0, 1.0/6.0] @=> float big_ratio[];
-
-// converts -1.0 to 1.0 to 0.0 to 1.0
-for (int i; i < big_col.size(); i++) {
-    (big_col[i] + 1.0) * 0.5 => big_col[i];
-}
-
 for (int i; i < total_size.size(); i++) {
     total_size[i] => circle_val[i].size;
-    total_size[i] => big_val[i].size => big_check[i].size => all_val[i].size;
+    total_size[i] => all_val[i].size;
     total_size[i] => total_width[i].size => total_height[i].size;
 }
 
@@ -102,46 +91,6 @@ fun void circleCalc(float arr[]) {
         else {
             0.0 => arr[i];
         }
-    }
-}
-
-// single big sin stuff
-fun void bigCalc(float arr[], float check[], float vol, float frq, int idx) {
-    // moves array around to next spot
-    for (arr.cap() - 2 => int i; i >= 0; i--) {
-        arr[i] => arr[i + 1];
-    }
-
-    if (idx == 0) {
-        // only calculates when needed
-        if (frq != big_prev_frq) {
-            frq/30.0 * two_pi => big_phase_inc;
-            frq => big_prev_frq;
-        }
-
-        // adds incrment to phase and wraps
-        big_phase_inc +=> big_phase;
-        if (big_phase > two_pi) {
-            two_pi -=> big_phase;
-        }
-    }
-
-    // maps data into 0.0 to 1.0 values
-    (Math.sin(big_phase) * vol + 1.0) * 0.5 * (1.0 - width * 2) + width  => big_amp;
-
-    big_amp - width => low;
-    big_amp + width => high;
-    if (low >= big_col[idx] && low < big_col[idx + 1]) {  
-        (low - big_col[idx])/big_ratio[idx] => arr[0]; 
-    }
-    else if (high > big_col[idx] && high <= big_col[idx + 1]) {  
-        1.0 + (high - big_col[idx])/big_ratio[idx] => arr[0]; 
-    }
-    else if (low < big_col[idx] && high > big_col[idx + 1]) {
-        0.00000001 => arr[0]; 
-    }
-    else {
-        0.0 => arr[0];
     }
 }
 
@@ -181,15 +130,15 @@ while (true) {
     // calculation functions 
     for (int i; i < num_cols; i++) {
         //circleCalc(circle_val[i]);
-        //bigCalc(big_val[i], big_check[i], big_vol, big_frq, i);
         //allCalc(all_val[i]);
     }
 
     m_sin.calc(multi_sin) @=> multi_sin;
+    s_sin.calc(single_sin) @=> single_sin;
 
     for (int i; i < num_cols; i++) {
-        combineVals(total_width[i], multi_sin[i], circle_val[i], big_val[i], all_val[i]);
-        combineVals(total_height[i], multi_sin[i], circle_val[i], big_val[i], all_val[i]);
+        combineVals(total_width[i], multi_sin[i], circle_val[i], single_sin[i], all_val[i]);
+        combineVals(total_height[i], multi_sin[i], circle_val[i], single_sin[i], all_val[i]);
     }
 
     // sends osc
