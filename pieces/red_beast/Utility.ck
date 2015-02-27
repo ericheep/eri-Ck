@@ -1,3 +1,7 @@
+// Eric Heep
+// red_beast, for Manuel Lima's 2nd Year DMA Recital "Red Light Piano"
+// MTIID4LIFE
+
 public class Utility {
    
     int num_cols;
@@ -10,6 +14,7 @@ public class Utility {
         }
     }
 
+    // fills all the squares, used mainly for initial projection mapping
     fun float[][] all(float val[][]) {
         for (int i; i < num_cols; i++) {
             for (int j; j < num_rows[i]; j++) {
@@ -19,7 +24,7 @@ public class Utility {
         return val;
     }
     
-    // resets valays
+    // resets arrays each frame 
     fun float[][] zero(float val[][]) {
         for (int i; i < num_cols; i++) {
             for (int j; j < num_rows[i]; j++) {

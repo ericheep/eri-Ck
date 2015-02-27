@@ -1,5 +1,8 @@
-// red beast
+// red-beast
+
 // Eric Heep
+// for Manuel Lima's 2nd Year DMA Recital "Red Light Piano"
+// MTIID4LIFE
 
 // beast osc setup
 BeastOsc out;
@@ -34,11 +37,17 @@ OrbitSin o_sin;
 o_sin.init(num_cols);
 float orbit_sin[num_cols][0];
 
+// all our values
+float total_width[num_cols][0];
+float total_height[num_cols][0];
+
 // array allocation
 for (int i; i < num_cols; i++) {
     num_rows[i] => multi_sin[i].size;
     num_rows[i] => single_sin[i].size;
     num_rows[i] => orbit_sin[i].size;
+    num_rows[i] => total_width[i].size;
+    num_rows[i] => total_height[i].size;
 }
 
 // test loop
@@ -53,22 +62,14 @@ o_sin.range(0.2);
 o_sin.offset(0.5);
 o_sin.speed(0.01);
 
-// all our values
-float total_width[7][0];
-float total_height[7][0];
-
-for (int i; i < num_rows.size(); i++) {
-    num_rows[i] => total_width[i].size => total_height[i].size;
-}
-
-// updates at framerate
+// updates at framerate (30/fps)
 while (true) {
     u.zero(total_width) @=> total_width;
     u.zero(total_height) @=> total_height;
 
     m_sin.calc(multi_sin) @=> multi_sin;
-    //s_sin.calc(single_sin) @=> single_sin;
-    //o_sin.calc(orbit_sin) @=> orbit_sin;
+    s_sin.calc(single_sin) @=> single_sin;
+    o_sin.calc(orbit_sin) @=> orbit_sin;
 
     u.order(total_width, multi_sin, orbit_sin, single_sin) @=> total_width;
     u.order(total_height, multi_sin, orbit_sin, single_sin) @=> total_height;

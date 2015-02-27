@@ -1,3 +1,9 @@
+// red-beast
+
+// Eric Heep
+// for Manuel Lima's 2nd Year DMA Recital "Red Light Piano"
+// MTIID4LIFE
+
 public class SingleSin extends Chubgraph{
 
     float frq;
