@@ -1,9 +1,16 @@
 // red beast
 // Eric Heep
 
-// osc stuff
-OscOut out;
-("localhost", 12001) => out.dest;
+// beast osc setup
+BeastOsc out;
+out.setDest("ceiling", "localhost", 12001);
+out.setDest("wall", "localhost", 12002);
+
+// beast osc row/column setup
+[14, 9, 9, 7, 9, 9, 14] @=> int total_size[];
+out.setCols(total_size.size());
+out.setRows("ceiling", [7, 5, 5, 3, 5, 5, 7]);
+out.setRows("wall", [7, 4, 4, 4, 4, 4, 7]);
 
 // consts
 2 * pi => float two_pi;
@@ -18,10 +25,6 @@ float sin_vol[num_cols];
 float sin_prev_frq[num_cols];
 float phase[num_cols];
 float phase_inc[num_cols];
-
-[14, 9, 9, 7, 9, 9, 14] @=> int total_size[];
-[7, 5, 5, 3, 5, 5, 7] @=> int ceiling_size[];
-[7, 4, 4, 4, 4, 4, 7] @=> int wall_size[];
 
 // sin values
 float sin_val[7][0];
@@ -62,13 +65,6 @@ for (int i; i < total_size.size(); i++) {
     total_size[i] => big_val[i].size => big_check[i].size => all_val[i].size;
     total_size[i] => total_width[i].size => total_height[i].size;
 }
-
-// addresses for the ceiling squares
-["/cw0", "/cw1", "/cw2", "/cw3", "/cw4", "/cw5", "/cw6"] @=> string cw_addr[];
-["/ch0", "/ch1", "/ch2", "/ch3", "/ch4", "/ch5", "/ch6"] @=> string ch_addr[];
-// addresses for the wall squares
-["/ww0", "/ww1", "/ww2", "/ww3", "/ww4", "/ww5", "/ww6"] @=> string ww_addr[];
-["/wh0", "/wh1", "/wh2", "/wh3", "/wh4", "/wh5", "/wh6"] @=> string wh_addr[];
 
 // test functions
 spork ~changeFrq();
@@ -214,26 +210,6 @@ fun void combineVals(float arr[], float sin_arr[], float circle_arr[], float big
     }
 }
 
-fun void oscSend(string ceiling, string wall, float arr[], int col) {
-    // to the ceiling
-    ("localhost", 12001) => out.dest;
-
-    out.start(ceiling);
-    for (int i; i < ceiling_size[col]; i++) {
-        out.add(arr[i]);
-    }
-    out.send();
-    
-    // to the wall
-    ("localhost", 12002) => out.dest;
-
-    out.start(wall);
-    for (int i; i < wall_size[col]; i++) {
-        out.add(arr[i + ceiling_size[col]]);
-    }
-    out.send();
-}
-
 // updates at framerate
 while (true) {
     // zeros contents of the array
@@ -253,10 +229,9 @@ while (true) {
         combineVals(total_width[i], sin_val[i], circle_val[i], big_val[i], all_val[i]);
         combineVals(total_height[i], sin_val[i], circle_val[i], big_val[i], all_val[i]);
     }
+
     // sends osc
-    for (int i; i < num_cols; i++) {
-        oscSend(cw_addr[i], ww_addr[i], total_width[i], i);
-        oscSend(ch_addr[i], wh_addr[i], total_height[i], i);
-    }
+    out.send("width", total_width);
+    out.send("height", total_height);
     1::second/30.0 => now;
 }
