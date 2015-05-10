@@ -1,5 +1,7 @@
 // Eric Heep
-// serial handling
+// basic serial protocol for receiving an 
+// array of bytes into ChucK from Arduino
+
 SerialIO serial;
 SerialIO.list() @=> string list[];
 
@@ -22,12 +24,12 @@ fun int device() {
 }
 
 serial.open(device(), SerialIO.B9600, SerialIO.BINARY);
+int data[2];
 
 while (true) {
-    int data[2];
     serial.onBytes(2) => now; 
     serial.getBytes() @=> data;
-    <<< data[0], data[1], "" >>>;
+    if (data != NULL) {
+        <<< "Incoming Bytes:", data[0], data[1], "" >>>;
+    }
 }
-
-
