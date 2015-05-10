@@ -40,13 +40,13 @@ while (true) {
 
     // ensures we're receiving our bytes in order, 0xff == 255
     if (byte == 0xff) {
-        serial.onBytes() => now; 
+        serial.onBytes(2) => now; 
         serial.getBytes() @=> bytes;
 
         // recommended in the case that we crash by 
         // trying to read a null array
         if (bytes != NULL) {
-            <<< "Incoming Message:", bytes[0], bytes[1], "" >>>;
+            <<< "Incoming data:", bytes[0], bytes[1], "" >>>;
         }
     }
 }

@@ -4,6 +4,8 @@
 // basic serial protocol for sending an 
 // array of bytes from Arduino into ChucK
 
+// only allows messages from 0 to 255
+
 // the first value is our sentinel byte, 0xff == 255
 byte bytes[] = {0xff, 1, 2};
 
