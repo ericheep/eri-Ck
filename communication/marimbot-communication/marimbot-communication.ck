@@ -36,7 +36,7 @@ if (port == -1) {
 }
 
 // fibonacci port number
-11235 => oin.port;
+12345 => oin.port;
 oin.listenAll();
 
 // serial setup 
