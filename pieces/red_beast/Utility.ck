@@ -35,7 +35,7 @@ public class Utility {
     }
 
     // decides a heirarchy for the different arrays
-    fun float[][] order(float val[][], float multi[][], float orbit[][], float single[][]) {
+    fun float[][] order(float val[][], float blink[][], float multi[][], float orbit[][], float single[][]) {
         for (int i; i < num_cols; i++) {
             for (int j; j < num_rows[i]; j++) {
                 if (val[i][j] <= 0.1) {
@@ -46,6 +46,9 @@ public class Utility {
                 }
                 if (single[i][j] > 0.0) {
                     single[i][j] + 2.0 => val[i][j];
+                }
+                if (blink[i][j] > 0.0) {
+                    blink[i][j] => val[i][j];
                 }
             }
         }

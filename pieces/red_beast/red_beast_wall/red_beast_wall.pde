@@ -38,7 +38,7 @@ NetAddress myRemoteLocation;
 }*/
 
 void setup() {
-  size(300, 300, P3D);
+  size(1280, 1024, P3D);
   noCursor();
   frameRate(30);
 
@@ -98,6 +98,6 @@ void draw() {
   }
 
   canvas.endDraw();
-  image(canvas, 0, 0);
+  //image(canvas, 0, 0);
   server.sendImage(canvas);
 }

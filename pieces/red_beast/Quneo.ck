@@ -475,18 +475,20 @@ public class Quneo {
 //    return Z; 
 //}
 
+/*
 Quneo q;
 int inc;
 
 while (true) {
-/*
     (inc + 1) % 128 => inc;
+
     for (int i; i < 8; i++) {
         q.slider(i, "led", inc);
     }
     for (int i; i < 12; i++) {
         q.arrow(i, "led", inc);
     }
+
     q.circle(0, "led", inc);
     q.circle(1, "led", inc);
     q.fader("led", inc);
@@ -494,8 +496,8 @@ while (true) {
     q.stop("led", inc);
     q.diamond("led", inc);
     q.led(145, Math.random2(0, 128), 127);
-    */
 
-    <<< q.play("led", 127) >>>;
+    //<<< q.play("led", 127) >>>;
     100::ms => now;
 }
+*/
