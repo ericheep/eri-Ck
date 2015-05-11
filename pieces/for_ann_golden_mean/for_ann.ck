@@ -22,7 +22,7 @@
 0.003074 => float pitch_inc;
 
 // max voices heard at a time ~13, using 15 for no overlap
-20 => int voices;
+30 => int voices;
 
 // envelope parameters:
 // 160ms => attack (BH)
@@ -152,5 +152,5 @@ fun void main() {
     2::second => now;
 }
 
-// runs program indefinitely
+// runs program until 240 sine waves have completed
 main();
