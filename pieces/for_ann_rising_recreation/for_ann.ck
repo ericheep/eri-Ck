@@ -45,7 +45,7 @@
 
 // oscillators
 SinOsc sin[voices];
-ADSR env[voices];
+WinFuncEnv env[voices];
 Gain master => dac;
 
 for (int i; i < voices; i++) {
@@ -53,8 +53,12 @@ for (int i; i < voices; i++) {
     sin[i] => env[i] => master;
     sin[i].gain(0.0);
   
-    // attack, decay, sustain, and release
-    env[i].set(attack, decay, 1.0, release);
+    // sets window type
+    env[i].setBlackmanHarris();
+  
+    // attack and release
+    env[i].attack(attack + decay);
+    env[i].release(release);
 }
 
 // latch to ensure each sine wave starts once
