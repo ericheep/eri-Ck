@@ -1,51 +1,50 @@
+// Eric Heep
+// March 23rd, 2017
+// Tape.ck
+
+// A simple tape looper using a delay line.
+// Not much to it really.
+
 public class Tape extends Chubgraph {
-    inlet => ADSR e => Delay del => Gain g => ADSR off => outlet;
+    inlet => Delay del => ADSR env => Gain g => outlet;
     g => del;
 
-    e.set(500::ms, 0::ms, 1.0, 500::ms);
-    off.set(100::ms, 0::ms, 1.0, 100::ms);
+    env.set(50::ms, 0::ms, 1.0, 50::ms);
+    delayLength(1::second);
 
-    int loop_active, rec_active;
-    delay(1.5::second);
+    0 => int m_loop;
 
-    fun void delay(dur d) {
+    fun void delayLength(dur d) {
         del.max(d);
         del.delay(d);
     }
 
     fun void loop(int l) {
         if (l) {
-            1 => loop_active;
+            1 => m_loop;
             spork ~ looping();
         }
         if (l == 0) {
-            0 => loop_active;
+            0 => m_loop;
         }
     }
 
     fun void looping() {
-        off.keyOn();
-        while (loop_active) {
+        env.keyOn();
+        while (m_loop) {
             1::samp => now;
         }
-        off.keyOff();
-    }
-
-    fun void rec(int r) {
-        if (r) {
-            1 => rec_active;
-            spork ~ recording();
-        }
-        if (r == 0) {
-            0 => rec_active;
-        }
-    }
-
-    fun void recording() {
-        e.keyOn();
-        while (rec_active) {
-            1::samp => now;        
-        }
-        e.keyOff();
+        env.keyOff();
     }
 }
+
+/*
+adc => Tape t => dac;
+t.gain(0.1);
+t.delayLength(1::second);
+t.loop(1);
+
+while (true) {
+    second => now;
+}
+*/
