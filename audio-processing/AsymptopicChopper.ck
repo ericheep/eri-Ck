@@ -2,6 +2,12 @@
 // March 19th, 2017
 // AsymptopicChopper.ck
 
+// Listens for a duration, then plays back a random
+// half of that buffer, and then plays back a random
+// half of that buffer, and continues to do so until the
+// playback length of that diminishing buffer
+// falls below a set minimum threshold. A fairly subtle chop.
+
 public class AsymptopicChopper extends Chubgraph {
 
     inlet => LiSa mic => outlet;
@@ -9,6 +15,8 @@ public class AsymptopicChopper extends Chubgraph {
     0 => int m_listen;
     3::second => dur m_bufferLength;
     10::second => dur m_maxBufferLength;
+    100::ms => dur m_minimumLength;
+    m_minimumLength * 0.5 => dur m_envLength;
 
     fun void listen(int lstn) {
         if (lstn == 1) {
@@ -28,9 +36,15 @@ public class AsymptopicChopper extends Chubgraph {
         l => m_maxBufferLength;
     }
 
+    fun void minimumLength(dur l) {
+        m_minimumLength;
+        l * 0.5 => m_envLength;
+    }
+
     fun void listening() {
         mic.duration(m_maxBufferLength);
         while (m_listen) {
+            mic.clear();
             mic.recPos(0::samp);
             mic.record(1);
             m_bufferLength => now;
@@ -41,38 +55,31 @@ public class AsymptopicChopper extends Chubgraph {
 
     fun void asymptopChop(dur bufferLength) {
         dur bufferStart;
+        m_bufferLength => dur bufferLength;
         mic.play(1);
-        while (m_bufferLength > 100::ms) {
+        while (bufferLength > m_minimumLength) {
             Math.random2(0, 1) => int which;
-            m_bufferLength * 0.5 => m_bufferLength;
-            m_bufferLength * which => bufferStart;
+            bufferLength * 0.5 => bufferLength;
+            bufferLength * which => bufferStart;
             mic.playPos(bufferStart);
-            mic.rampUp(50::ms);
-            m_bufferLength - 50::ms => now;
-            mic.rampDown(50::ms);
-            50::ms => now;
+            mic.rampUp(m_envLength);
+            bufferLength - m_envLength => now;
+            mic.rampDown(m_envLength);
+            m_envLength => now;
         }
         mic.play(0);
     }
 }
 
 /*
-4 => int NUM;
+adc => AsymptopicChopper a => dac;
 
-AsymptopicChopper a[NUM];
-
-for (0 => int i; i < NUM; i++) {
-    adc => a[i] => dac;
-    a[i].listen(1);
-}
-
-dac.gain(0.0);
+a.listen(1);
+a.length(3::second);
+a.minimumLength(10::ms);
+dac.gain(0.1);
 
 while (true) {
-    for (0 => int i; i < NUM; i++) {
-        a[i].length(Math.random2f(0.9, 1.1) * second);
-    }
     second => now;
-
 }
 */
