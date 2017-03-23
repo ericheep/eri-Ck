@@ -1,17 +1,28 @@
+// Eric Heep
+// March 23rd, 2017
+// Chopper.ck
+
+
 public class Chopper extends Chubgraph {
 
     inlet => LiSa mic => outlet;
+
     int div, play_active, rec_active;
     1 => int sl;
 
-    dur rec_time, chop_time, chop_pos;
-    100::ms => dur ramp_time;
-    16::second => dur length;
-   
+    dur m_record, chop_time, chop_pos;
+    0::ms => dur m_rampTime;
+
+    maxLength(16::second);
+
+    fun void maxLength(dur l) {
+        mic.duration(l);
+    }
+
     fun void divisions(int d) {
         d => div;
         if (div != 0 && div > 0) {
-            rec_time/div => chop_time; 
+            rec_time/div => chop_time;
         }
     }
 
@@ -25,11 +36,11 @@ public class Chopper extends Chubgraph {
 
     fun void play(int p) {
         if (p) {
-            1 => play_active;
+            1 => m_play;
             spork ~ playing();
         }
         if (p == 0) {
-            0 => play_active;
+            0 => m_play;
         }
     }
 
@@ -51,11 +62,12 @@ public class Chopper extends Chubgraph {
         mic.play(0);
     }
 
-    fun void rampTime(dur r) {
+    fun void rampTime(float r) {
         r => ramp_time;
     }
 
     fun void record(int r) {
+        // clears buffer and parameters
         if (r) {
             1 => rec_active;
             spork ~ recording();
@@ -66,12 +78,10 @@ public class Chopper extends Chubgraph {
     }
 
     fun void recording() {
-        // clears buffer and parameters
-        mic.duration(length);
         mic.record(1);
         now => time past;
         while (rec_active) {
-            1::samp => now;        
+            1::samp => now;
         }
         now => time present;
         mic.record(0);
