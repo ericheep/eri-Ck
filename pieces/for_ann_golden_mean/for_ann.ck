@@ -3,11 +3,11 @@
 
 // A recreation of James Tenney's "For Ann (rising)."
 // This recreation uses the the golden mean instead of a JI minor sixth.
-// the result is that each first order difference tone reinforces the 
+// the result is that each first order difference tone reinforces the
 // sine wave below it.
 
 // Initial analysis of the piece was done in Python using music
-// information retrieval techniques to closely approximate the 
+// information retrieval techniques to closely approximate the
 // parameters that Tenney used.
 
 // ~~~~ the following parameters are based off of the analysis
@@ -38,27 +38,31 @@
 // inverse of the golden mean, for finding notes below rather than above
 1.0/golden_mean => float inverse;
 
-// total number of sine waves: 
+// total number of sine waves:
 240 => int num_sines;
 
 // ~~~~ the rest of the code is standard ChucK
 
 // oscillators
 SinOsc sin[voices];
-WinFuncEnv env[voices];
+ADSR env[voices];
 Gain master => dac;
 
 for (int i; i < voices; i++) {
     // sound chain
     sin[i] => env[i] => master;
     sin[i].gain(0.0);
-  
+
     // sets window type
-    env[i].setBlackmanHarris();
-  
+    //env[i].attackCurve(2.0);
+    //env[i].decayCurve(0.5);
+    env[i].sustainLevel(0.9);
+    //env[i].releaseCurve(0.5);
+
     // attack and release
-    env[i].attack(attack + decay);
-    env[i].release(release);
+    env[i].attackTime(attack);
+    env[i].decayTime(decay);
+    env[i].releaseTime(release);
 }
 
 // latch to ensure each sine wave starts once
@@ -87,10 +91,10 @@ fun void assignFreq() {
             1 => latch[i];
             spork ~ play(i);
         }
-        sin[i].freq(hz[i]); 
+        sin[i].freq(hz[i]);
     }
     // uncomment to show frequencies while the program is running
-    //printHz();
+    // printHz();
 }
 
 // sanity function that ensures proper logic and calculations
@@ -101,7 +105,7 @@ fun void printHz() {
     if (print_inc == 0) {
         // appends frequencies throughout the array
         for (int i; i < voices; i++) {
-            print + " " + hz[i] => print;
+            print + " " + Math.round(sin[i].freq()) => print;
         }
         <<< print, "" >>>;
     }
@@ -118,7 +122,7 @@ fun void raisePitch() {
 }
 
 // generates a sine wave with the approximate envelope based off
-// of the original, called after the value of the hz array passes 20hz 
+// of the original, called after the value of the hz array passes 20hz
 fun void play(int which) {
     // ensures only 240 sine waves are called
     total++;
@@ -127,14 +131,14 @@ fun void play(int which) {
     sin[which].phase(0.0);
 
     // variable gain can be used to avoid clipping
-    sin[which].gain(0.10);
+    sin[which].gain(0.1);
     <<< "Playing Sine Wave:", total >>>;
 
     // main envelope, where all the sound comes from
     env[which].keyOn();
     attack + decay => now;
     env[which].keyOff();
-    release => now;
+    release + ms => now;
     sin[which].gain(0.0);
 
     // re-enables latch per sine wave
