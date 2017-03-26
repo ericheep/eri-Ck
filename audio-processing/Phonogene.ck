@@ -1,12 +1,13 @@
-// Phonogene.ck
 // Eric Heep
-// live sampling class inspired by Make Noise's Phonogene
+// March 28th, 2017
+// Phonogene.ck
+
+// Live sampling instrument inspired by Make Noise's Phonogene
 // http://www.makenoisemusic.com/phonogene.shtml
-// requires BHEnv.ck
 
 public class Phonogene extends Chubgraph {
     // sound chain
-    inlet => LiSa mic => BHEnv env => outlet;
+    inlet => LiSa mic => WinFuncEnv env => outlet;
 
     // slice array
     dur slc[0];
@@ -14,10 +15,13 @@ public class Phonogene extends Chubgraph {
     // scoped variables
     1.0 => float rte;
     float pos, grain_size, grain_pos;
-    int overdub_active, play_active, rec_active, pos_button;
+    int overdub_active, pos_button;
+
+    false => int m_play;
+    false => int m_record;
 
     dur env_time, rec_time, grain_time, loop_time, end, begin;
-    8::second => dur length;
+    8::second => dur m_length;
 
     grainSize(1.0);
     grainPos(0.5);
@@ -42,7 +46,10 @@ public class Phonogene extends Chubgraph {
         }
     }
 
-    // allocate memory for audio
+    fun void maxDuration(dur l) {
+        mic.duration(length);
+    }
+
     fun void duration(dur l) {
         l => length;
     }
@@ -57,25 +64,23 @@ public class Phonogene extends Chubgraph {
 
     fun void play(int p) {
         if (p) {
-            1 => play_active;
+            1 => m_play;
             spork ~ playing();
         }
         if (p == 0) {
-            0 => play_active;
+            0 => m_play;
         }
     }
 
     fun void playing() {
         mic.play(1);
-        while(play_active) {
+        grain_time/6 => dur envTime;
+        while(m_play) {
             mic.playPos(0::samp);
-            now => time past;
-            grain_time/6 => dur env_time;
             env.up(env_time);
-            grain_time - env_time => now;
-            env.down(env_time);
-            env_time => now;
-            <<< (now - past)/second, grain_time/second >>>;
+            grain_time - envTime => now;
+            env.down(envTime);
+            envTime => now;
             sliceReset();
         }
         mic.play(0);
@@ -114,11 +119,11 @@ public class Phonogene extends Chubgraph {
 
     fun void record(int r) {
         if (r) {
-            1 => rec_active;
+            1 => m_record;
             spork ~ recording();
         }
         if (r == 0) {
-            0 => rec_active;
+            0 => m_record;
         }
     }
 
@@ -127,12 +132,11 @@ public class Phonogene extends Chubgraph {
         slc.clear();
 
         // clears buffer and parameters
-        mic.duration(length);
         mic.loop(1);
         mic.record(1);
         now => time past;
-        while (rec_active) {
-            1::samp => now;        
+        while (m_record) {
+            1::samp => now;
         }
         now => time present;
         mic.record(0);
@@ -160,7 +164,7 @@ public class Phonogene extends Chubgraph {
                 else {
                     sum++;
                 }
-            } 
+            }
         }
         return x;
     }
@@ -184,7 +188,7 @@ public class Phonogene extends Chubgraph {
     }
 
     fun void slicePos(float p) {
-        p => pos; 
+        p => pos;
     }
 
     fun void sliceReset() {
