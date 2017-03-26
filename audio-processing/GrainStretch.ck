@@ -1,6 +1,13 @@
 // Eric Heep
-// March 14th, 2017
+// March 25th, 2017
 // GrainStretch.ck
+
+// Basic grain strech that elongates a buffer of
+// audio while retaining its pitch, the more grains,
+// the more coherent the message.
+
+// This version constantly listens and overwrites two audio buffers.
+// Switching between the two to ensure a constant signal.
 
 public class GrainStretch extends Chubgraph {
 
@@ -15,7 +22,7 @@ public class GrainStretch extends Chubgraph {
     1.0 => float m_rate;
 
     1.0::second => dur m_bufferLength;
-    8.0::second => dur m_maxBufferLength;
+    maxLength(8::second);
 
     fun void stretch(int s) {
         if (s == 1) {
@@ -25,6 +32,11 @@ public class GrainStretch extends Chubgraph {
         else {
             0 => m_stretching;
         }
+    }
+
+    fun void maxLength(dur m) {
+        mic[0].duration(m);
+        mic[1].duration(m);
     }
 
     fun void length(dur l) {
@@ -41,11 +53,10 @@ public class GrainStretch extends Chubgraph {
 
     fun void stretching() {
         0 => int idx;
-        mic[0].duration(m_maxBufferLength);
-        mic[1].duration(m_maxBufferLength);
 
         recordVoice(mic[idx], m_bufferLength);
 
+        // switches between audio buffers, ensuring a constant processed signal
         while (m_stretching) {
             spork ~ recordVoice(mic[(idx + 1) % 2], m_bufferLength);
             (idx + 1) % 2 => idx;
@@ -69,10 +80,11 @@ public class GrainStretch extends Chubgraph {
 
         // for some reason if you try to put a sample
         // at a fraction of samp, it will silence ChucK
+        // but not crash it?
         if (halfGrain < samp) {
+            <<< "Your grains are too small to produce audio.", "" >>>;
             return;
         }
-
 
         // envelope parameters
         env.attackTime(grainEnv);
@@ -108,7 +120,6 @@ public class GrainStretch extends Chubgraph {
     }
 }
 
-/*
 adc => GrainStretch g => dac;
 // adc => Gain gr => dac;
 
@@ -120,4 +131,3 @@ g.grains(100);
 while(true) {
     samp => now;
 }
-*/
