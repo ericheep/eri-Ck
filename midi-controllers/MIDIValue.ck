@@ -2,6 +2,8 @@
 // March 13th, 2017
 // MIDIValue.ck
 
+// Convenience class for scaling and easing values.
+
 public class MIDIValue {
     // incoming value
     0 => int m_midiVal;
