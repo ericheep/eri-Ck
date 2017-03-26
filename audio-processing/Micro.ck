@@ -39,9 +39,11 @@ public class Micro extends Chubgraph{
     fun void looping () {
         mic.clear();
         mic.recPos(0::samp);
+
         mic.record(1);
         m_length => now;
         mic.record(0);
+
         mic.play(1);
         while (m_loop) {
             mic.playPos(0::samp);
@@ -54,9 +56,9 @@ public class Micro extends Chubgraph{
     }
 }
 
+/*
 adc => Micro m => dac;
 
-/*
 while (true) {
     m.loop(1);
     1::second => now;
