@@ -1,3 +1,14 @@
+// Eric Heep
+// Sometime around 2013-2014.
+
+// This was an experiment to created a version
+// of LiSa that would always start or stop recording
+// close to a zero crossing, eliminating the discontinuities
+// that are usually introduced there.
+
+// Will revisit sometime later, currently inactive and
+// probably has memory issues to be honest.
+
 public class LiSaZero extends Chubgraph {
 
     inlet => LiSa mic => Gain g => outlet;
@@ -11,7 +22,7 @@ public class LiSaZero extends Chubgraph {
     fun void end(dur len) {
         scan(len, 1);
     }
-    
+
     fun void scan(dur len, int which) {
         int idx;
         float val;
@@ -37,11 +48,11 @@ public class LiSaZero extends Chubgraph {
 
             //<<< pos + i::samp >>>;
             if (val < min) {
-                val => min;        
+                val => min;
                 i => idx;
             }
         }
-        spork ~ zero(idx, samps, which); 
+        spork ~ zero(idx, samps, which);
     }
 
     fun void zero(int idx, int samps, int which) {
@@ -70,12 +81,13 @@ public class LiSaZero extends Chubgraph {
         mic.playPos(p);
     }
 
-    fun void record(int r) { 
+    fun void record(int r) {
         mic.record(r);
     }
-    
+
 }
 
+/*
 adc => LiSaZero mic => dac;
 
 50::ms => dur step;
@@ -102,3 +114,4 @@ while (true) {
     mic.end(scan);
     scan => now;
 }
+*/
