@@ -159,17 +159,15 @@ fun int arrayMax(int arr[]) {
     return max;
 }
 
-/*
-Enter a melody into into the base array of any desired length. The
-order of the Markov chain determines how complex the transition matrix
-is (the order is the major determining factor, a range of 4 and an order
-of 1 creates a transition matrix of 4 values, whereas a range of 4 and an
-order of 3 creates a transiton matrix of 64 values [4**3]).
-
-A new chain is created every loop based on original base array, but you
-can experiment with generating new transition matrices on the fly or changing
-the order if you see fit.
-*/
+// Enter a melody into into the base array of any desired length. The
+// order of the Markov chain determines how complex the transition matrix
+// is (the order is the major determining factor, a range of 4 and an order
+// of 1 creates a transition matrix of 4 values, whereas a range of 4 and an
+// order of 3 creates a transiton matrix of 64 values [4**3]).
+//
+// A new chain is created every loop based on original base array, but you
+// can experiment with generating new transition matrices on the fly or changing
+// the order if you see fit.
 
 /*
 Markov markov;
@@ -194,4 +192,4 @@ while (true) {
     }
     markov.generateChain(base, transitionMatrix, order, range) @=> chain;
 }
-*
+*/
