@@ -1,8 +1,8 @@
 // Eric Heep
-// November 2016
-// CTD.ck
+// March 28th 2017
+// QTD.ck
 
-// Cubic Distortion Tone class that given the
+// Quadratic Distortion Tone class that given the
 // the frequency for a desired distortion tone,
 // will play the two sine waves to produce that
 // otoacoustic emission. Based on the following papers.
@@ -20,22 +20,23 @@
 // "The Ear Tone Toolbox for Auditory Distortion Product Synthesis"
 
 
-public class CDT extends Chubgraph {
+public class QDT extends Chubgraph {
 
     SinOsc f1 => outlet;
     SinOsc f2 => outlet;
 
     1.24 => float m_ratio;
-    440 => float m_CDTFreq;
+    440 => float m_QDTFreq;
 
     0.0 => float m_f1Freq;
     0.0 => float m_f2Freq;
 
-    setCDT(m_CDTFreq, m_ratio);
+    setQDT(m_QDTFreq, m_ratio);
 
     // sets gain of f1
     fun void f1Gain(float g) {
-        f1.gain(g); }
+        f1.gain(g);
+    }
 
     // sets gain of f2
     fun void f2Gain(float g) {
@@ -54,13 +55,13 @@ public class CDT extends Chubgraph {
 
     // sets frequency of the CDT
     fun float freq(float f) {
-        f => m_CDTFreq;
-        setCDT(m_CDTFreq, m_ratio);
+        f => m_QDTFreq;
+        setQDT(m_QDTFreq, m_ratio);
     }
 
     // gets frequency of the CDT
     fun float freq() {
-        return m_CDTFreq;
+        return m_QDTFreq;
     }
 
     // sets the ratio of the two frequencies
@@ -68,7 +69,7 @@ public class CDT extends Chubgraph {
     fun float ratio(float r) {
         if (r > 1.0 && r < 2.0) {
             r => m_ratio;
-            setCDT(m_CDTFreq, m_ratio);
+            setQDT(m_QDTFreq, m_ratio);
         }
         else {
             <<< "Ratio falls outside of expected range (1.0, 2.0)", "" >>>;
@@ -80,14 +81,15 @@ public class CDT extends Chubgraph {
         return m_ratio;
     }
 
-    // internal function to set CDT after either
+    // internal function to set QDT after either
     // the ratio between f1 and f2 is changed,
-    // or if the desired frequency of the CDT is changed
-    fun void setCDT(float CDTFreq, float ratio) {
-        CDTFreq/(2.0 - ratio) => m_f1Freq;
-        2 * m_f1Freq - CDTFreq => m_f2Freq;
+    // or if the desired frequency of the QDT is changed
+    fun void setQDT(float QDTFreq, float ratio) {
+        1.0/((ratio - 1.0)/QDTFreq) => m_f1Freq;
+        QDTFreq + m_f1Freq => m_f2Freq;
+
         if (m_f1Freq > 22050 || m_f2Freq > 22050) {
-            <<< "Caution: A tone has fallen outside the audible range.", m_f1Freq, m_f2Freq, "" >>>;
+            <<< "Caution: A tone has fallen outside the audible range.", f1.freq(), f2.freq(), "" >>>;
         }
 
         f1.freq(m_f1Freq);
@@ -96,17 +98,19 @@ public class CDT extends Chubgraph {
 }
 
 // Quick example that changes the ratios of the
-// CDT while keeping the same distortion tone frequency.
+// QDT while keeping the same distortion tone frequency.
 
-CDT c => dac;
-c.gain(0.4);
-c.freq(440);
+QDT q => dac;
+q.gain(0.4);
+q.freq(440);
 
 [1.18, 1.19, 1.20, 1.21, 1.22] @=> float ratios[];
 int inc;
 
 while (true) {
-    c.ratio(ratios[inc]);
+    q.ratio(ratios[inc]);
+
     5::second => now;
+
     (inc + 1) % ratios.size() => inc;
 }
