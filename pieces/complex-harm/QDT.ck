@@ -100,6 +100,8 @@ public class QDT extends Chubgraph {
 // Quick example that changes the ratios of the
 // QDT while keeping the same distortion tone frequency.
 
+/*
+
 QDT q => dac;
 q.gain(0.4);
 q.freq(440);
@@ -114,3 +116,5 @@ while (true) {
 
     (inc + 1) % ratios.size() => inc;
 }
+
+*/

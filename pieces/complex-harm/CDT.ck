@@ -98,6 +98,7 @@ public class CDT extends Chubgraph {
 // Quick example that changes the ratios of the
 // CDT while keeping the same distortion tone frequency.
 
+/*
 CDT c => dac;
 c.gain(0.4);
 c.freq(440);
@@ -110,3 +111,4 @@ while (true) {
     5::second => now;
     (inc + 1) % ratios.size() => inc;
 }
+*/
