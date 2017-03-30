@@ -6,7 +6,7 @@ adc => Listener l;
 l.listen(1);
 l.fidelity(0.5);
 
-4 => int NUM_DPS;
+2 => int NUM_DPS;
 
 // sound
 QDT q[NUM_DPS];
@@ -15,15 +15,21 @@ ADSR gate;
 gate.attackTime(10::ms);
 gate.releaseTime(10::ms);
 
-110 => float freq;
+// parameters
+8.0 => float offsetDivide;
+0.0 => float easingGain;
+0.0 => float easingFreq;
 
 10::ms => dur attack;
-8.0 => float offsetDivide;
+200::ms => dur maxGateLength;
+200::ms => dur maxHitLength;
+25::ms => dur changingSpeed;
 
 for (0 => int i; i < NUM_DPS; i++) {
     env[i].attackTime(10::ms);
     q[i] => gate => env[i] => dac.chan(i);
     q[i].gain(1.0);
+    q[i].freq(0.0);
 }
 
 // Markov
@@ -66,9 +72,6 @@ fun void queueAll(dur s, int which) {
     }
 }
 
-0.0 => float easingGain;
-1.0 => float easingFreq;
-25::ms => dur changingSpeed;
 
 fun void updateEasing() {
     while (true) {
@@ -85,16 +88,18 @@ fun void updateEasing() {
 
 
 fun void gating() {
+    gate.keyOn();
     while (true) {
-        1.0 - easingGain => float timeMultiplier;
-        (timeMultiplier) * 100::ms => changingSpeed;
-        if (timeMultiplier < 0.025) {
-            gate.keyOn();
-        } else {
-            gate.keyOn();
-            (1.0 - easingGain) * 2::second + 10::ms => now;
+        1.0 - easingGain => float speedMultiplier;
+        (speedMultiplier) * maxHitLength => changingSpeed;
+
+        Math.random2f(0.0, speedMultiplier) => float randomMultiplier;
+
+        if (speedMultiplier > 0.025) {
             gate.keyOff();
-            (1.0 - easingGain) * 2::second + 10::ms => now;
+            randomMultiplier * maxGateLength + attack => now;
+            gate.keyOn();
+            randomMultiplier * maxGateLength + attack => now;
         }
         1::samp => now;
     }
