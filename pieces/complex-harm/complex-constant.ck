@@ -143,6 +143,5 @@ while (true) {
     for (0 => int i; i < base.size(); i++) {
         spork ~ queueAll(speed + changingSpeed, i);
     }
-    <<< (speed + changingSpeed)/second, changingSpeed/second >>>;
     speed + changingSpeed => now;
 }
