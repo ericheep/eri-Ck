@@ -1,16 +1,30 @@
 // Eric Heep
 // March 29th, 2017
 
+// input
+adc => Listener l;
+l.listen(1);
+l.fidelity(0.5);
+
+4 => int NUM_DPS;
+
+// sound
+QDT q[NUM_DPS];
+ADSR env[NUM_DPS];
+
+110 => float freq;
+
+10::ms => dur attack;
+8.0 => float offsetDivide;
+
+for (0 => int i; i < NUM_DPS; i++) {
+    env[i].attackTime(10::ms);
+    q[i] => env[i] => dac.chan(i);
+    q[i].gain(1.0);
+}
+
+// Markov
 Markov markov;
-
-QDT q1 => dac.left;
-QDT q2 => dac.right;
-
-q1.freq(440);
-q2.freq(220);
-
-q1.gain(0.1);
-q2.gain(0.1);
 
 1 => int order;
 6 => int range;
@@ -18,14 +32,80 @@ q2.gain(0.1);
 [2, 0, 3, 1, 4, 2, 5, 3, 5, 2, 4, 1, 3, 0] @=> int base[];
 markov.generateTransitionMatrix(base, order, range) @=> float transitionMatrix[][];
 
-[1.14, 1.11, 1.20, 1.17, 1.20, 1.23] @=> float ratios[];
-base @=> int inputChain[];
+[1.111, 1.112, 1.113, 1.114, 1.115, 1.116] @=> float lowRatios[];
+[1.111, 1.125, 1.428, 1.660, 1.200, 1.250] @=> float highRatios[];
+
+lowRatios @=> float ratios[];
+
+int inputChain[NUM_DPS][base.size()];
+
+for (int i; i < NUM_DPS; i++) {
+    base @=> inputChain[i];
+}
+
+25::ms => dur speed;
+
+fun void hit(int idx, dur s, int which) {
+    env[idx].releaseTime(s);
+    env[idx].keyOn();
+    q[idx].ratio(ratios[which]);
+    attack => now;
+    env[idx].keyOff();
+    s - attack => now;
+}
+
+fun void queueAll(dur s, int which) {
+    s/offsetDivide=> dur offsetSpeed;
+
+    for (0 => int i; i < NUM_DPS; i++) {
+        spork ~ hit(i, s, inputChain[i][which]);
+        offsetSpeed => now;
+    }
+}
+
+0.0 => float easingGain;
+1.0 => float easingFreq;
+
+fun void updateEasing() {
+    while (true) {
+        if (l.dbMean() > 10.0) {
+            if (easingGain < 1.0) {
+                0.00040 +=> easingGain;
+            }
+        } else if(easingGain > 0.0){
+            0.00020 -=> easingGain;
+        }
+        25::ms => now;
+    }
+}
+
+spork ~ updateEasing();
+
 
 while (true) {
-    for (0 => int i; i < inputChain.size(); i++) {
-        q1.ratio(ratios[ inputChain[ i ] ]);
-        q2.ratio(ratios[ inputChain[ i ] ]);
-        100::ms => now;
+    1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => float confidence;
+
+    for (0 => int i; i < NUM_DPS; i++) {
+        q[i].gain(easingGain);
+        if (l.dbMean() > 10.0) {
+            <<< "Freq:", easingFreq, "Confidence:", confidence, "Gain:", easingGain >>>;
+            for (0 => int i; i < ratios.size(); i++) {
+                (highRatios[i] - lowRatios[i]) * confidence + lowRatios[i] => ratios[i];
+            }
+
+            if (easingFreq < l.freqMean() + 0.1) {
+                0.025 +=> easingFreq;
+            }
+            else if (easingFreq > l.freqMean() - 0.1) {
+                0.025 -=> easingFreq;
+            }
+
+            q[i].freq(easingFreq);
+        }
+        markov.generateChain(base, transitionMatrix, order, range) @=> inputChain[i];
     }
-    markov.generateChain(base, transitionMatrix, order, range) @=> inputChain;
+    for (0 => int i; i < base.size(); i++) {
+        spork ~ queueAll(speed, i);
+    }
+    speed => now;
 }

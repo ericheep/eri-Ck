@@ -10,14 +10,14 @@ public class Listener extends Chubgraph {
     inlet => g;
 
     3 => g.op;
-    0.9999 => p.pole;
+    0.999 => p.pole;
 
     float m_freqReadings[0];
     float m_dbReadings[0];
 
     0   => int m_listen;
     10  => int m_dbSize;
-    250 => int m_freqSize;
+    750 => int m_freqSize;
 
     5.0 => float m_dbThreshold;
     0.0 => float m_db;
@@ -68,15 +68,11 @@ public class Listener extends Chubgraph {
 
             if (dbMean() > m_dbThreshold) {
                 pt.get() => m_freqReadings[m_freqSize - 1];
-            }
-            else {
-                Math.random2f(0.0, 1000.0) => m_freqReadings[m_freqSize - 1];
-            }
 
-            for (int i; i < m_freqSize - 1; i++) {
-                m_freqReadings[i + 1] => m_freqReadings[i];
+                for (int i; i < m_freqSize - 1; i++) {
+                    m_freqReadings[i + 1] => m_freqReadings[i];
+                }
             }
-
 
             readingDuration => now;
         }
