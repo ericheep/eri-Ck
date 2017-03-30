@@ -11,6 +11,9 @@ l.fidelity(0.5);
 // sound
 QDT q[NUM_DPS];
 ADSR env[NUM_DPS];
+ADSR gate;
+gate.attackTime(10::ms);
+gate.releaseTime(10::ms);
 
 110 => float freq;
 
@@ -19,7 +22,7 @@ ADSR env[NUM_DPS];
 
 for (0 => int i; i < NUM_DPS; i++) {
     env[i].attackTime(10::ms);
-    q[i] => env[i] => dac.chan(i);
+    q[i] => gate => env[i] => dac.chan(i);
     q[i].gain(1.0);
 }
 
@@ -65,6 +68,7 @@ fun void queueAll(dur s, int which) {
 
 0.0 => float easingGain;
 1.0 => float easingFreq;
+25::ms => dur changingSpeed;
 
 fun void updateEasing() {
     while (true) {
@@ -73,14 +77,31 @@ fun void updateEasing() {
                 0.00040 +=> easingGain;
             }
         } else if(easingGain > 0.0){
-            0.00020 -=> easingGain;
+            0.00010 -=> easingGain;
         }
         25::ms => now;
     }
 }
 
-spork ~ updateEasing();
 
+fun void gating() {
+    while (true) {
+        1.0 - easingGain => float timeMultiplier;
+        (timeMultiplier) * 100::ms => changingSpeed;
+        if (timeMultiplier < 0.025) {
+            gate.keyOn();
+        } else {
+            gate.keyOn();
+            (1.0 - easingGain) * 2::second + 10::ms => now;
+            gate.keyOff();
+            (1.0 - easingGain) * 2::second + 10::ms => now;
+        }
+        1::samp => now;
+    }
+}
+
+spork ~ gating();
+spork ~ updateEasing();
 
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => float confidence;
@@ -105,7 +126,7 @@ while (true) {
         markov.generateChain(base, transitionMatrix, order, range) @=> inputChain[i];
     }
     for (0 => int i; i < base.size(); i++) {
-        spork ~ queueAll(speed, i);
+        spork ~ queueAll(speed + changingSpeed, i);
     }
-    speed => now;
+    speed + changingSpeed => now;
 }
