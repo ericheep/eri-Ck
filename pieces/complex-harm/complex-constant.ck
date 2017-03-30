@@ -117,14 +117,60 @@ fun void gating() {
 
 spork ~ gating();
 spork ~ updateEasing();
+spork ~ uiPrint();
+
+string uiPrintOutput;
+string prevUiPrintOutput;
+["~", "*", "-"] @=> string possibilities[];
+
+fun void updatePrint(string lis, float gn, float frq, float eFrq, float cnf, float eCnf)
+{
+    string temp;
+
+    " | Listening: " + lis + " " + uiFiller(gn) + " " +=> temp;
+    " Frq: " + format(frq, 5) + " " + uiFiller(frq/1000.0) + " " +=> temp;
+    " EasFrq: " + format(eFrq, 5) + " " + uiFiller(eFrq/1000.0) + " " +=> temp;
+    " Cnf: " + format(cnf, 4) + " " + uiFiller(cnf) + " " +=> temp;
+    " EasCnf: " + format(eCnf, 4) + " " + uiFiller(eCnf) + " " + "|" +=> temp;
+    temp => uiPrintOutput;
+}
+
+fun string uiFiller(float f) {
+    string filler;
+    for (0 => int i; i < 26; i++) {
+        if (Math.random2f(0.0, 1.0) < f) {
+            possibilities[Math.random2(0, possibilities.size() - 1)] +=> filler;
+        }
+        else {
+            " " +=> filler;
+        }
+    }
+    return filler;
+}
+
+fun void uiPrint() {
+    while (true) {
+        0.1::second => now;
+        if (uiPrintOutput != prevUiPrintOutput) {
+            <<< uiPrintOutput, "" >>>;
+            uiPrintOutput => prevUiPrintOutput;
+        }
+    }
+}
+
+fun string format(float val, int precision) {
+    " " => string p;
+    return (val + p).substring(0, precision);
+}
 
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
-
+    " " => string lis;
     for (0 => int i; i < NUM_DPS; i++) {
         q[i].gain(easingGain);
         if (l.dbMean() > 10.0) {
-            <<< "Freq:", easingFreq, "Confidence:", confidence, "Gain:", easingGain >>>;
+            //<<< "Freq:", easingFreq, "Confidence:", confidence, "Gain:", easingGain >>>;
+            "X" => lis;
             for (0 => int i; i < ratios.size(); i++) {
                 (highRatios[i] - lowRatios[i]) * confidence + lowRatios[i] => ratios[i];
             }
@@ -143,5 +189,6 @@ while (true) {
     for (0 => int i; i < base.size(); i++) {
         spork ~ queueAll(speed + changingSpeed, i);
     }
+    updatePrint(lis, l.dbMean()/100.0, l.freqMean(), easingFreq, confidence, easingConfidence);
     speed + changingSpeed => now;
 }
