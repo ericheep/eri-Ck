@@ -20,16 +20,19 @@ gate.releaseTime(10::ms);
 0.0 => float easingGain;
 0.0 => float easingFreq;
 
+0.0 => float confidence;
+0.0 => float easingConfidence;
+
 10::ms => dur attack;
-2000::ms => dur maxGateLength;
-200::ms => dur maxHitLength;
+500::ms => dur maxGateLength;
+500::ms => dur maxHitLength;
 25::ms => dur changingSpeed;
 
 for (0 => int i; i < NUM_DPS; i++) {
     env[i].attackTime(10::ms);
     q[i] => gate => env[i] => dac.chan(i);
     q[i].gain(1.0);
-    q[i].freq(220.0);
+    q[i].freq(0.0);
 }
 
 // Markov
@@ -82,15 +85,20 @@ fun void updateEasing() {
         } else if(easingGain > 0.0){
             0.00010 -=> easingGain;
         }
+        if (easingConfidence < confidence) {
+            0.001 +=> easingConfidence;
+        } else if(easingGain > confidence){
+            0.001 -=> easingConfidence;
+        }
         25::ms => now;
+        // <<< easingConfidence, confidence >>>;
     }
 }
-
 
 fun void gating() {
     gate.keyOn();
     while (true) {
-        1.0 - easingGain => float speedMultiplier;
+        1.0 - easingConfidence => float speedMultiplier;
         (speedMultiplier) * maxHitLength => changingSpeed;
 
         speedMultiplier * maxGateLength * 0.3 => dur gateLength;
@@ -111,7 +119,7 @@ spork ~ gating();
 spork ~ updateEasing();
 
 while (true) {
-    1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => float confidence;
+    1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
 
     for (0 => int i; i < NUM_DPS; i++) {
         q[i].gain(easingGain);
@@ -135,5 +143,6 @@ while (true) {
     for (0 => int i; i < base.size(); i++) {
         spork ~ queueAll(speed + changingSpeed, i);
     }
+    <<< (speed + changingSpeed)/second, changingSpeed/second >>>;
     speed + changingSpeed => now;
 }
