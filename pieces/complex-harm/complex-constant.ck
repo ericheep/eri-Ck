@@ -17,7 +17,7 @@ gate.releaseTime(10::ms);
 
 // parameters
 8.0 => float offsetDivide;
-0.1 => float easingGain;
+0.0 => float easingGain;
 0.0 => float easingFreq;
 
 10::ms => dur attack;
