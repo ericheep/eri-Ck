@@ -198,10 +198,11 @@ fun string format(float val, int precision) {
 int input;
 int whichTime;
 0.0004 => float totalInc;
-[0.5, .7, 85] @=> float newTotal[];
+// 0.0004 => float totalInc;
+[0.16, 0.33, 0.50, 0.66, 0.82] @=> float newTotal[];
 
 // 0.01 => float totalInc;
-[30, 60, 100] @=> int times[];
+[10, 20, 35, 60, 90, 120] @=> int times[];
 
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
@@ -265,7 +266,7 @@ while (true) {
         newTotal[whichTime] => total;
 
         whichTime++;
-        if (whichTime == 3) {
+        if (whichTime == 6) {
             me.exit();
         }
 
