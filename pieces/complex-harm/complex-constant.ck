@@ -96,7 +96,7 @@ fun void updateEasing() {
     while (true) {
         if (l.dbMean() > 10.0) {
             if (easingGain < 1.0) {
-                0.0004 +=> easingGain;
+                0.00036 +=> easingGain;
             }
         } else if(easingGain > 0.0){
             0.0001 -=> easingGain;
