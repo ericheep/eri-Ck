@@ -7,7 +7,7 @@ adc => Listener l;
 l.listen(1);
 l.fidelity(0.5);
 
-4 => int NUM_DPS;
+2 => int NUM_DPS;
 
 // OscOut out;
 // out.dest("127.0.0.1", 12000);
@@ -48,9 +48,10 @@ gate.releaseTime(10::ms);
 
 10::ms => dur attack;
 500::ms => dur maxGateLength;
-500::ms => dur maxHitLength;
-25::ms => dur changingSpeed;
+50::ms => dur maxHitLength;
 25::ms => dur speed;
+0.0 => float total;
+0 => int slowActive;
 
 for (0 => int i; i < NUM_DPS; i++) {
     env[i].attackTime(10::ms);
@@ -87,8 +88,7 @@ fun void queueAll(dur s, int which) {
     s/offsetDivide=> dur offsetSpeed;
 
     for (0 => int i; i < NUM_DPS; i++) {
-        spork ~ hit(i, s, inputChain[i][which]);
-        offsetSpeed => now;
+        hit(i, s, inputChain[i][which]);
     }
 }
 
@@ -96,7 +96,7 @@ fun void updateEasing() {
     while (true) {
         if (l.dbMean() > 10.0) {
             if (easingGain < 1.0) {
-                0.0004 +=> easingGain;
+                0.0008 +=> easingGain;
             }
         } else if(easingGain > 0.0){
             0.0001 -=> easingGain;
@@ -106,6 +106,12 @@ fun void updateEasing() {
         } else if(easingGain > confidence){
             0.001 -=> easingConfidence;
         }
+        if (easingFreq < l.freqMean() + 0.1) {
+            0.125 +=> easingFreq;
+        }
+        else if (easingFreq > l.freqMean() - 0.1) {
+            0.125 -=> easingFreq;
+        }
         25::ms => now;
     }
 }
@@ -113,13 +119,12 @@ fun void updateEasing() {
 fun void gating() {
     gate.keyOn();
     while (true) {
-        easingConfidence => float speedMultiplier;
-        (speedMultiplier) * maxHitLength => changingSpeed;
+        1.0 - easingGain => float speedMultiplier;
 
         speedMultiplier * maxGateLength * 0.3 => dur gateLength;
         speedMultiplier * Math.random2f(0.0, 1.0) * maxGateLength * 0.7 +=> dur randLength;
 
-        if (speedMultiplier > 0.025) {
+        if (speedMultiplier > 0.025 && !slowActive) {
             gate.keyOff();
             gateLength + randLength + attack => now;
             gate.keyOn();
@@ -138,20 +143,20 @@ string uiPrintOutput;
 string prevUiPrintOutput;
 ["~", "*", "-"] @=> string possibilities[];
 
-fun void updatePrint(string lis, float gn, float frq, float eFrq, float cnf, float eCnf)
+fun void updatePrint(string lis, float gn, float frq, float eFrq, float eGn, float tot)
 {
     string temp;
     " | Listening: " + lis + " " + uiFiller(gn) + " " +=> temp;
-    " Frq: " + format(frq, 5) + " " + uiFiller(frq/1000.0) + " " +=> temp;
-    " EasFrq: " + format(eFrq, 5) + " " + uiFiller(eFrq/1000.0) + " " +=> temp;
-    " Cnf: " + format(cnf, 4) + " " + uiFiller(cnf) + " " +=> temp;
-    " EasCnf: " + format(eCnf, 4) + " " + uiFiller(eCnf) + " " + "|" +=> temp;
+    " Gain: " + format(eGn, 4) + " " + uiFiller(eGn) + " " +=> temp;
+    " Freq: " + format(frq, 5) + " " + uiFiller(frq/1000.0) + " " +=> temp;
+    " FllwFreq: " + format(eFrq, 5) + " " + uiFiller(eFrq/1000.0) + " " +=> temp;
+    " Tot: " + format(tot, 4) + " " + uiFiller(tot) + " " + "|" +=> temp;
     temp => uiPrintOutput;
 }
 
 fun string uiFiller(float f) {
     string filler;
-    for (0 => int i; i < 26; i++) {
+    for (0 => int i; i < 25; i++) {
         if (Math.random2f(0.0, 1.0) < f) {
             possibilities[Math.random2(0, possibilities.size() - 1)] +=> filler;
         }
@@ -177,31 +182,46 @@ fun string format(float val, int precision) {
     return (val + p).substring(0, precision);
 }
 
+int input;
+
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
     " " => string lis;
+
     for (0 => int i; i < NUM_DPS; i++) {
         q[i].gain(easingGain);
         if (l.dbMean() > 10.0) {
+            0.0002 +=> total;
             "X" => lis;
             for (0 => int i; i < ratios.size(); i++) {
                 (highRatios[i] - lowRatios[i]) * confidence + lowRatios[i] => ratios[i];
             }
-
-            if (easingFreq < l.freqMean() + 0.1) {
-                0.025 +=> easingFreq;
-            }
-            else if (easingFreq > l.freqMean() - 0.1) {
-                0.025 -=> easingFreq;
-            }
-
-            q[i].freq(easingFreq);
         }
+        q[i].freq(easingFreq);
         markov.generateChain(base, transitionMatrix, order, range) @=> inputChain[i];
     }
-    for (0 => int i; i < base.size(); i++) {
-        spork ~ queueAll(speed + changingSpeed + attack, i);
+
+    // going through the Markov chain
+    (input + 1) % base.size() => input;
+    queueAll(speed, input);
+
+    updatePrint(lis, l.dbMean()/100.0, l.freqMean(), easingFreq, easingGain, total);
+
+    if (total > 1.0) {
+        1 => slowActive;
+        gate.keyOn();
+
+        for (int i; i < NUM_DPS; i++) {
+            env[i].keyOn();
+        }
+        1000::ms => now;
+
+        for (int i; i < NUM_DPS; i++) {
+            env[i].releaseTime(10::second);
+            env[i].keyOff();
+        }
+        10000::ms => now;
+
+        0.8 => total;
     }
-    updatePrint(lis, l.dbMean()/100.0, l.freqMean(), easingFreq, confidence, easingConfidence);
-    speed + changingSpeed => now;
 }
