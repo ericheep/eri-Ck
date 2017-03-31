@@ -150,7 +150,7 @@ fun void updatePrint(string lis, float gn, float frq, float eFrq, float eGn, flo
     " Gain: " + format(eGn, 4) + " " + uiFiller(eGn) + " " +=> temp;
     " Freq: " + format(frq, 5) + " " + uiFiller(frq/1000.0) + " " +=> temp;
     " FllwFreq: " + format(eFrq, 5) + " " + uiFiller(eFrq/1000.0) + " " +=> temp;
-    " Tot: " + format(tot, 4) + " " + uiFiller(tot) + " " + "|" +=> temp;
+    " Tot: " + format(tot, 4) + " " + uiStraight(tot) + " " + "|" +=> temp;
     temp => uiPrintOutput;
 }
 
@@ -158,6 +158,19 @@ fun string uiFiller(float f) {
     string filler;
     for (0 => int i; i < 25; i++) {
         if (Math.random2f(0.0, 1.0) < f) {
+            possibilities[Math.random2(0, possibilities.size() - 1)] +=> filler;
+        }
+        else {
+            " " +=> filler;
+        }
+    }
+    return filler;
+}
+
+fun string uiStraight(float f) {
+    string filler;
+    for (0 => int i; i < 25; i++) {
+        if (f * 25 > i) {
             possibilities[Math.random2(0, possibilities.size() - 1)] +=> filler;
         }
         else {
@@ -188,7 +201,7 @@ int whichTime;
 [0.5, .7, 85] @=> float newTotal[];
 
 // 0.01 => float totalInc;
-[25, 50, 90] @=> int times[];
+[30, 60, 100] @=> int times[];
 
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
