@@ -96,7 +96,7 @@ fun void updateEasing() {
     while (true) {
         if (l.dbMean() > 10.0) {
             if (easingGain < 1.0) {
-                0.0008 +=> easingGain;
+                0.0005 +=> easingGain;
             }
         } else if(easingGain > 0.0){
             0.0001 -=> easingGain;
@@ -184,7 +184,7 @@ fun string format(float val, int precision) {
 
 int input;
 int whichTime;
-0.0002 => float totalInc;
+0.0004 => float totalInc;
 
 // 0.01 => float totalInc;
 [15, 40, 70] @=> int times[];
