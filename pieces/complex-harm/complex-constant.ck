@@ -7,7 +7,7 @@ adc => Listener l;
 l.listen(1);
 l.fidelity(0.5);
 
-2 => int NUM_DPS;
+4 => int NUM_DPS;
 
 // OscOut out;
 // out.dest("127.0.0.1", 12000);
