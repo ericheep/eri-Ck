@@ -183,6 +183,11 @@ fun string format(float val, int precision) {
 }
 
 int input;
+int whichTime;
+0.0002 => float totalInc;
+
+// 0.01 => float totalInc;
+[15, 40, 70] @=> int times[];
 
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
@@ -191,7 +196,7 @@ while (true) {
     for (0 => int i; i < NUM_DPS; i++) {
         q[i].gain(easingGain);
         if (l.dbMean() > 10.0) {
-            0.0002 +=> total;
+            totalInc +=> total;
             "X" => lis;
             for (0 => int i; i < ratios.size(); i++) {
                 (highRatios[i] - lowRatios[i]) * confidence + lowRatios[i] => ratios[i];
@@ -214,14 +219,21 @@ while (true) {
         for (int i; i < NUM_DPS; i++) {
             env[i].keyOn();
         }
-        1000::ms => now;
+        100::ms => now;
 
         for (int i; i < NUM_DPS; i++) {
             env[i].releaseTime(10::second);
             env[i].keyOff();
         }
-        10000::ms => now;
+        <<< " | ", "" >>>;
+        <<< " | -~Countdown ~-", "" >>>;
+        for (times[whichTime] => int i; i > 0; i--) {
+            <<< " | ", i, "" >>>;
+            1::second => now;
+        }
+        <<< " | ", "" >>>;
 
         0.8 => total;
+        whichTime++;
     }
 }
