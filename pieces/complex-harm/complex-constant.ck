@@ -7,7 +7,7 @@ adc => Listener l;
 l.listen(1);
 l.fidelity(0.5);
 
-4 => int NUM_DPS;
+2 => int NUM_DPS;
 
 // OscOut out;
 // out.dest("127.0.0.1", 12000);
@@ -96,7 +96,7 @@ fun void updateEasing() {
     while (true) {
         if (l.dbMean() > 10.0) {
             if (easingGain < 1.0) {
-                0.0005 +=> easingGain;
+                0.0004 +=> easingGain;
             }
         } else if(easingGain > 0.0){
             0.0001 -=> easingGain;
@@ -185,9 +185,10 @@ fun string format(float val, int precision) {
 int input;
 int whichTime;
 0.0004 => float totalInc;
+[0.5, .7, 85] @=> float newTotal[];
 
 // 0.01 => float totalInc;
-[15, 40, 70] @=> int times[];
+[25, 50, 90] @=> int times[];
 
 while (true) {
     1.0 - Std.clampf(l.freqStd(), 0.0, 500.0)/500.0 => confidence;
@@ -222,18 +223,38 @@ while (true) {
         100::ms => now;
 
         for (int i; i < NUM_DPS; i++) {
-            env[i].releaseTime(10::second);
-            env[i].keyOff();
+            env[i].releaseTime(whichTime::second * (2/3));
         }
+
+        (times[whichTime])/3 => int remainderTime;
+        times[whichTime] - remainderTime => int onTime;
+
         <<< " | ", "" >>>;
         <<< " | -~Countdown ~-", "" >>>;
-        for (times[whichTime] => int i; i > 0; i--) {
+
+        for (onTime => int i; i > 0; i--) {
+            <<< " | ", i + remainderTime, "" >>>;
+            1::second => now;
+        }
+
+        for (int i; i < NUM_DPS; i++) {
+            env[i].releaseTime(remainderTime::second);
+            env[i].keyOff();
+        }
+
+        for (remainderTime => int i; i > 0; i--) {
             <<< " | ", i, "" >>>;
             1::second => now;
         }
+
         <<< " | ", "" >>>;
 
-        0.8 => total;
+        newTotal[whichTime] => total;
+
         whichTime++;
+        if (whichTime == 3) {
+            me.exit();
+        }
+
     }
 }
