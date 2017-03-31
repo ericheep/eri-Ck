@@ -1,15 +1,38 @@
 // Eric Heep
 // March 29th, 2017
+// complex-const-harm.ck
 
-// input
+// input ~-
 adc => Listener l;
 l.listen(1);
 l.fidelity(0.5);
 
 4 => int NUM_DPS;
 
-// sound
+// OscOut out;
+// out.dest("127.0.0.1", 12000);
+
+// fun void playing(int idx) {
+//     out.start("/p");
+//     out.add(idx);
+//     out.send();
+// }
+
+// fun void stopping(int idx) {
+//     out.start("/s");
+//     out.add(idx);
+//     out.send();
+// }
+
+// qdts ~-
 QDT q[NUM_DPS];
+
+// quadratic distorion tone ratiods ~-
+[1.111, 1.112, 1.113, 1.114, 1.115, 1.116] @=> float lowRatios[];
+[1.111, 1.125, 1.428, 1.660, 1.200, 1.250] @=> float highRatios[];
+lowRatios @=> float ratios[];
+
+// envelopes ~-
 ADSR env[NUM_DPS];
 ADSR gate;
 gate.attackTime(10::ms);
@@ -27,6 +50,7 @@ gate.releaseTime(10::ms);
 500::ms => dur maxGateLength;
 500::ms => dur maxHitLength;
 25::ms => dur changingSpeed;
+25::ms => dur speed;
 
 for (0 => int i; i < NUM_DPS; i++) {
     env[i].attackTime(10::ms);
@@ -35,7 +59,7 @@ for (0 => int i; i < NUM_DPS; i++) {
     q[i].freq(0.0);
 }
 
-// Markov
+// Markov ~-
 Markov markov;
 
 1 => int order;
@@ -43,19 +67,11 @@ Markov markov;
 
 [2, 0, 3, 1, 4, 2, 5, 3, 5, 2, 4, 1, 3, 0] @=> int base[];
 markov.generateTransitionMatrix(base, order, range) @=> float transitionMatrix[][];
-
-[1.111, 1.112, 1.113, 1.114, 1.115, 1.116] @=> float lowRatios[];
-[1.111, 1.125, 1.428, 1.660, 1.200, 1.250] @=> float highRatios[];
-
-lowRatios @=> float ratios[];
-
 int inputChain[NUM_DPS][base.size()];
 
 for (int i; i < NUM_DPS; i++) {
     base @=> inputChain[i];
 }
-
-25::ms => dur speed;
 
 fun void hit(int idx, dur s, int which) {
     env[idx].releaseTime(s);
@@ -64,6 +80,7 @@ fun void hit(int idx, dur s, int which) {
     attack => now;
     env[idx].keyOff();
     s - attack => now;
+
 }
 
 fun void queueAll(dur s, int which) {
@@ -75,15 +92,14 @@ fun void queueAll(dur s, int which) {
     }
 }
 
-
 fun void updateEasing() {
     while (true) {
         if (l.dbMean() > 10.0) {
             if (easingGain < 1.0) {
-                0.00040 +=> easingGain;
+                0.0004 +=> easingGain;
             }
         } else if(easingGain > 0.0){
-            0.00010 -=> easingGain;
+            0.0001 -=> easingGain;
         }
         if (easingConfidence < confidence) {
             0.001 +=> easingConfidence;
@@ -91,14 +107,13 @@ fun void updateEasing() {
             0.001 -=> easingConfidence;
         }
         25::ms => now;
-        // <<< easingConfidence, confidence >>>;
     }
 }
 
 fun void gating() {
     gate.keyOn();
     while (true) {
-        1.0 - easingConfidence => float speedMultiplier;
+        easingConfidence => float speedMultiplier;
         (speedMultiplier) * maxHitLength => changingSpeed;
 
         speedMultiplier * maxGateLength * 0.3 => dur gateLength;
@@ -126,7 +141,6 @@ string prevUiPrintOutput;
 fun void updatePrint(string lis, float gn, float frq, float eFrq, float cnf, float eCnf)
 {
     string temp;
-
     " | Listening: " + lis + " " + uiFiller(gn) + " " +=> temp;
     " Frq: " + format(frq, 5) + " " + uiFiller(frq/1000.0) + " " +=> temp;
     " EasFrq: " + format(eFrq, 5) + " " + uiFiller(eFrq/1000.0) + " " +=> temp;
@@ -169,7 +183,6 @@ while (true) {
     for (0 => int i; i < NUM_DPS; i++) {
         q[i].gain(easingGain);
         if (l.dbMean() > 10.0) {
-            //<<< "Freq:", easingFreq, "Confidence:", confidence, "Gain:", easingGain >>>;
             "X" => lis;
             for (0 => int i; i < ratios.size(); i++) {
                 (highRatios[i] - lowRatios[i]) * confidence + lowRatios[i] => ratios[i];
@@ -187,7 +200,7 @@ while (true) {
         markov.generateChain(base, transitionMatrix, order, range) @=> inputChain[i];
     }
     for (0 => int i; i < base.size(); i++) {
-        spork ~ queueAll(speed + changingSpeed, i);
+        spork ~ queueAll(speed + changingSpeed + attack, i);
     }
     updatePrint(lis, l.dbMean()/100.0, l.freqMean(), easingFreq, confidence, easingConfidence);
     speed + changingSpeed => now;
