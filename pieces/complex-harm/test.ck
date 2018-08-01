@@ -1,7 +1,12 @@
-[1, 0, 1] @=> int arr[];
+SinOsc nois;
+nois.gain(0.2);
 
-for (int i; i < arr.size() - 1; i++) {
-    arr[i + 1] => arr[i];
+4 => int NUM_CHAN;
+
+while (true) {
+    for (0 => int i; i < NUM_CHAN; i++) {
+        nois => dac.chan(i);
+        1000::ms => now;
+        nois =< dac.chan(i);
+    }
 }
-
-<<< arr[0], arr[1], arr[2] >>>;
