@@ -7,6 +7,8 @@ public class NanoKontrol2 {
     int knob[9];
     int slider[9];
 
+    int play, forward, record, stop;
+
     int port;
     MidiIn min;
     MidiMsg msg;
@@ -43,12 +45,25 @@ public class NanoKontrol2 {
                     data3 => r[i];
                 }
             }
+            if (data2 == 41) {
+                data3 => play;
+            }
+            if (data2 == 42) {
+                data3 => stop;
+            }
+            if (data2 == 44) {
+                data3 => forward;
+            }
+            if (data2 == 45) {
+                data3 => record;
+            }
         }
     }
 }
 
-NanoKontrol2 n;
+/* NanoKontrol2 n;
 
 while (true) {
     50::ms => now;
 }
+*/
