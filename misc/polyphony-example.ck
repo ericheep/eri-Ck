@@ -1,8 +1,12 @@
+// Eric Heep
+// Sept 12th, 2018
+
+
 class FilterModule extends Chubgraph {
     inlet => LPF lpf => outlet;
     lpf.freq(1000);
 
-    // do some modulation stuff here
+    // do modulation stuff here
 }
 
 class BeepBoops extends Chubgraph {
@@ -55,7 +59,6 @@ for (0 => int i; i < beepBoops.size(); i++) {
 while (true) {
     spork ~ noteOn(beepBoops[whichBeepBoop]);
     (whichBeepBoop + 1) % beepBoops.size() +=> whichBeepBoop;
-    100::ms => now;
-    <<< "!" >>>;
+    200::ms => now;
 }
 
