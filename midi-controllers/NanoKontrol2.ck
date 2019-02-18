@@ -9,7 +9,6 @@ public class NanoKontrol2 {
 
     int play, forward, record, stop;
 
-    int port;
     MidiIn min;
     MidiMsg msg;
     min.open("nanoKONTROL2");
