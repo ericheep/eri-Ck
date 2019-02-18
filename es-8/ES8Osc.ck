@@ -1,8 +1,5 @@
 // ES8Osc.ck
 
-// OSC receiver to receive commands from
-// the web server.
-
 public class ES8Osc {
     OscIn osc;
     osc.port(12345);
