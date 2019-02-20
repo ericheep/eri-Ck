@@ -5,24 +5,41 @@ class ES8Note {
     Step volt => dac.left;
     SinOsc lfo => blackhole;
     lfo.freq(0.00);
-    0.05 => float lfoMaxSpeed;
+    0.05 => float lfoMaxTargetSpeed;
     0.22 => float lfoMaxAmount;
 
-    float note, lfoSpeed, lfoAmount;
+    float note, lfoSpeed, lfoTargetSpeed, lfoAmount, lfoTargetAmount;
 
     fun void changeNote(int midiNote) {
         midiNote => note;
     }
 
-    fun void changeLfoSpeed(float x) {
-        x * lfoMaxSpeed => lfoSpeed;
-        <<< lfoSpeed >>>;
+    fun void changeLfoTargetAmount(float y) {
+        y * lfoMaxAmount => lfoTargetAmount;
     }
 
-    fun void changeLfoAmount(float y) {
-        y * lfoMaxAmount => lfoAmount;
-        <<< lfoAmount >>>;
+    fun void changeLfoTargetSpeed(float x) {
+        x * lfoMaxTargetSpeed => lfoTargetSpeed;
     }
+
+    fun void updateLfoSpeed() {
+        0.00001 => float speedIncrement;
+        while (true) {
+            if (lfoSpeed < lfoTargetSpeed - speedIncrement) {
+                speedIncrement +=> lfoSpeed;
+            } else if (lfoSpeed > lfoTargetSpeed + speedIncrement) {
+                speedIncrement -=> lfoSpeed;
+            }
+            if (lfoAmount < lfoTargetAmount - speedIncrement) {
+                speedIncrement +=> lfoAmount;
+            } else if (lfoAmount > lfoTargetAmount + speedIncrement) {
+                speedIncrement -=> lfoAmount;
+            }
+            1::ms => now;
+        }
+    }
+
+    spork ~ updateLfoSpeed();
 
     fun void setVolt() {
         while (true) {
@@ -49,14 +66,14 @@ fun void noteEvents() {
 fun void xEvents() {
     while (true) {
         n.x => now;
-        es8Note.changeLfoSpeed(n.x.getNoteFloat());
+        es8Note.changeLfoTargetSpeed(n.x.getNoteFloat());
     }
 }
 
 fun void yEvents() {
     while (true) {
         n.y => now;
-        es8Note.changeLfoAmount(n.y.getNoteFloat());
+        es8Note.changeLfoTargetAmount(n.y.getNoteFloat());
     }
 }
 
