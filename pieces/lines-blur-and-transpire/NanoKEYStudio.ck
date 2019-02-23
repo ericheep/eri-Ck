@@ -50,14 +50,14 @@ class NanoEvent extends Event {
     }
 
     fun void setGlideNote(float inc, dur cycle) {
-        spork ~ glideNote();
+        spork ~ glideNoteLoop(inc, cycle);
     }
 
     fun void setGlideVelocity(float inc, dur cycle) {
-        spork ~ glideVelocity();
+        spork ~ glideVelocityLoop(inc, cycle);
     }
 
-    fun void glideNote(float inc, dur cycle) {
+    fun void glideNoteLoop(float inc, dur cycle) {
         while (true) {
             if (glideNote < glideTargetNote - inc) {
                 inc +=> glideNote;
@@ -68,10 +68,11 @@ class NanoEvent extends Event {
         }
     }
 
-    fun void glideVelocity(float inc, dur cycle) {
+    fun void glideVelocityLoop(float inc, dur cycle) {
         while (true) {
             if (glideVelocity  < glideTargetVelocity - inc) {
                 inc +=> glideVelocity;
+                this.signal();
             } else if (glideVelocity > glideTargetVelocity + inc) {
                 inc -=> glideVelocity;
             }
