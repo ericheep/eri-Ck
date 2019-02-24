@@ -1,10 +1,13 @@
 // ClipGroup.ck
 // Class for managing specialized sample playback
+// add in pauses from this time to this time
 
 public class ClipGroup extends Chubgraph {
     SndBuf clips[0];
     ADSR clipEnvs[0];
-    ADSR env => outlet;
+    PowerADSR env => outlet;
+    env.attackCurve(5.0);
+    env.releaseCurve(5.0);
     "" => string dir;
 
     int fadingIn;
@@ -23,6 +26,8 @@ public class ClipGroup extends Chubgraph {
 
             ADSR clipEnv;
             clipEnv.keyOn();
+            //clipEnv.attackCurve(5.0);
+            //clipEnv.releaseCurve(5.0);
 
             clipEnvs << clipEnv;
             clips << clip;
@@ -31,12 +36,14 @@ public class ClipGroup extends Chubgraph {
         }
     }
 
-    fun void setAttack(dur a) {
-        env.attackTime(a);
+    fun void setGain(float g) {
+        for (0 => int i; i < clips.size(); i++) {
+            clips[i].gain(g);
+        }
     }
 
-    fun void setRelease(dur r) {
-        env.releaseTime(r);
+    fun void setAttackRelease(dur a, dur r) {
+        env.set(a, 0.0::samp, 1.0, r);
         r => fadeOut;
     }
 
@@ -69,6 +76,10 @@ public class ClipGroup extends Chubgraph {
         spork ~ rotating(from, to, crossFade);
     }
 
+    fun void pauses(dur from, dur to, dur fade, dur silence) {
+        spork ~ pausing(from, to, fade, silence);
+    }
+
     fun int getNewClip(int currentClip) {
         currentClip => int newClip;
         while (newClip == currentClip) {
@@ -79,38 +90,56 @@ public class ClipGroup extends Chubgraph {
 
     fun void rotating(dur from, dur to, dur crossFade) {
         for (0 => int i; i < clipEnvs.size(); i++) {
-            clipEnvs[i].attackTime(crossFade);
-            clipEnvs[i].releaseTime(crossFade);
-            clipEnvs[i].keyOff();
+            clipEnvs[i].set(crossFade, 0.0::second, 1.0, crossFade);
         }
 
         int currentClip;
         while (true) {
             getNewClip(currentClip) => int newClip;
-            clipEnvs[currentClip].keyOff();
             clipEnvs[newClip].keyOn();
-            Math.random2f(from/second, to/second)::second => now;
+            Math.random2f(from/second, to/second)::second => dur seconds;
+            seconds - (crossFade/2) => now;
+            clipEnvs[newClip].keyOff();
+            crossFade/2 => now;
             newClip => currentClip;
+        }
+    }
+
+    fun void pausing(dur from, dur to, dur fade, dur silence) {
+        for (0 => int i; i < clipEnvs.size(); i++) {
+            clipEnvs[i].set(fade, 0.0::second, 1.0, fade);
+        }
+
+        while (true) {
+            for (0 => int i; i < clipEnvs.size(); i++) {
+                clipEnvs[i].keyOn();
+            }
+            fade => now;
+            Math.random2f(from/second, to/second)::second => dur seconds;
+            seconds => now;
+            for (0 => int i; i < clipEnvs.size(); i++) {
+                clipEnvs[i].keyOff();
+            }
+            fade + silence => now;
         }
     }
 }
 
 /* [ */
-/*     "radio-l-1.wav", */
-/*     "radio-l-2.wav", */
-/*     "radio-l-3.wav", */
-/*     "radio-l-4.wav", */
-/*     "radio-l-5.wav" */
+/*     "metal-74hz.wav", */
+/*     "metal-515hz.wav" */
 /* ] @=> string filenames[]; */
 
 /* ClipGroup cg => dac; */
 /* cg.setDir(me.dir() + "clips"); */
 /* cg.setClips(filenames); */
-/* cg.setAttack(30::second); */
-/* cg.setRelease(30::second); */
-/* cg.rotate(0.5::second, 0.55::second, 0.25::second); */
+/* cg.setAttackRelease(30::second, 30::second); */
+/* cg.pauses(6.0::second, 12.0::second, 5.0::second, 5.0::second); */
+/* cg.setGain(0.7); */
+/* // cg.rotate(5.0::second, 6.0::second, 4.0::second); */
 /* cg.play(); */
 
-/* 30::second => now; */
+/* hour => now; */
+
 /* cg.stop(); */
 /* 30::second => now; */
