@@ -76,8 +76,8 @@ public class ClipGroup extends Chubgraph {
         spork ~ rotating(from, to, crossFade);
     }
 
-    fun void pauses(dur from, dur to, dur fade, dur silence) {
-        spork ~ pausing(from, to, fade, silence);
+    fun void pauses(dur wait, dur from, dur to, dur fade, dur silence) {
+        spork ~ pausing(wait, from, to, fade, silence);
     }
 
     fun int getNewClip(int currentClip) {
@@ -105,11 +105,11 @@ public class ClipGroup extends Chubgraph {
         }
     }
 
-    fun void pausing(dur from, dur to, dur fade, dur silence) {
+    fun void pausing(dur wait, dur from, dur to, dur fade, dur silence) {
         for (0 => int i; i < clipEnvs.size(); i++) {
             clipEnvs[i].set(fade, 0.0::second, 1.0, fade);
         }
-
+        wait => now;
         while (true) {
             for (0 => int i; i < clipEnvs.size(); i++) {
                 clipEnvs[i].keyOn();
