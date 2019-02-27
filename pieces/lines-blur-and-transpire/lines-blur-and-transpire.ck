@@ -198,6 +198,7 @@ class ES8Note {
             } else if (lfoAmount > lfoTargetAmount + speedIncrement) {
                 speedIncrement -=> lfoAmount;
             }
+            lfo.freq(lfoSpeed);
             1::ms => now;
         }
     }
