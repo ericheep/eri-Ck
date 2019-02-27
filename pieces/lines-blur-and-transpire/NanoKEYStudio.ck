@@ -143,7 +143,7 @@ public class NanoKEYStudio {
                     x.setNote(data2);
                     x.signal();
                 }
-                if (data2 >= 48 && data2 <= 120) {
+                if (data2 >= 36 && data2 <= 120) {
                     key.setNoteOn(data1);
                     key.setNote(data2);
                     key.setVelocity(data3);
